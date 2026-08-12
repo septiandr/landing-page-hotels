@@ -50,11 +50,22 @@ export function BookingWidget({ whatsapp, phone, hotelCurrency = "IDR" }: Bookin
   const nights = getNightsBetween(checkIn, checkOut);
 
   // Pre-fill dari URL shareable (BK-011): ?checkin=&checkout=&adults=&kids=&rooms=&code=
-  // (dijadwalkan ke tick berikutnya — setState sinkron dalam effect dilarang
-  // oleh react-hooks/set-state-in-effect; satu kali saja, bukan per-render)
+  // Re-run saat search berubah (mis. klik promo /?code=X#booking dari halaman
+  // yang sama — komponen tidak remount pada soft navigation). Hanya menerapkan
+  // parameter jika URL benar-benar membawanya. (setState dijadwalkan ke tick
+  // berikutnya — setState sinkron dalam effect dilarang react-hooks.)
+  const urlSearch = typeof window === "undefined" ? "" : window.location.search;
   useEffect(() => {
+    const sp = new URLSearchParams(urlSearch);
+    const hasParams =
+      sp.get("checkin") ||
+      sp.get("checkout") ||
+      sp.get("adults") ||
+      sp.get("kids") ||
+      sp.get("rooms") ||
+      sp.get("code");
+    if (!hasParams) return;
     const t = window.setTimeout(() => {
-      const sp = new URLSearchParams(window.location.search);
       const clamp = (v: string | null, def: number, min: number, max: number) => {
         const n = Number(v);
         if (!v || Number.isNaN(n)) return def;
@@ -71,7 +82,7 @@ export function BookingWidget({ whatsapp, phone, hotelCurrency = "IDR" }: Bookin
       if (code) setPromoCode(code);
     }, 0);
     return () => window.clearTimeout(t);
-  }, []);
+  }, [urlSearch]);
 
   /** User memperbaiki input → keluar dari state invalid (BK-006 UX). */
   function clearInvalidState() {
@@ -288,7 +299,6 @@ export function BookingWidget({ whatsapp, phone, hotelCurrency = "IDR" }: Bookin
                   hotelCurrency={hotelCurrency}
                   selectedId={selectedId}
                   onSelect={setSelectedId}
-                  onBook={onBook}
                 />
 
                 {selectedRate && (

@@ -250,7 +250,7 @@ async function main() {
         bookingEnd: daysFromNow(30),
         terms: "Berlaku untuk booking langsung di website. Tidak dapat digabung dengan promo lain.",
         status: PromotionStatus.ACTIVE,
-        showCountdown: false,
+        showCountdown: true,
         sortOrder: 1,
       },
       {

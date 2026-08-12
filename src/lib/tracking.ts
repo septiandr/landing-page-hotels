@@ -23,6 +23,12 @@ declare global {
   }
 }
 
+/** Client-only: push event umum ke dataLayer (mis. `click_book_now`, ANA-003). */
+export function trackEvent(name: string, params?: Record<string, unknown>): void {
+  if (typeof window === "undefined" || !window.dataLayer) return;
+  window.dataLayer.push({ event: name, ...(params ? { [name]: params } : {}) });
+}
+
 /** Client-only: push `booking_started` sebelum navigasi ke engine. */
 export function trackBookingStarted(params: BookingStartedParams): void {
   if (typeof window === "undefined" || !window.dataLayer) return;

@@ -12,7 +12,6 @@ export interface AvailabilityResultsProps {
   hotelCurrency: string;
   selectedId: string | null;
   onSelect: (roomId: string) => void;
-  onBook: (rate: RateOption) => void;
 }
 
 export function AvailabilityResults({
@@ -21,7 +20,6 @@ export function AvailabilityResults({
   hotelCurrency,
   selectedId,
   onSelect,
-  onBook,
 }: AvailabilityResultsProps) {
   return (
     <div className="space-y-3">
