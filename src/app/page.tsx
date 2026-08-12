@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { Header } from "@/components/landing/Header";
 import { Hero } from "@/components/landing/Hero";
 import { Benefits } from "@/components/landing/Benefits";
+import { RoomList } from "@/components/landing/RoomList";
 
 // Landing page M2: section berikutnya menyusul (LP-005..LP-019).
 export const dynamic = "force-dynamic";
@@ -26,7 +27,7 @@ async function fetchOrEmpty<T>(promise: Promise<T[]>): Promise<T[]> {
 }
 
 export default async function HomePage() {
-  const [hotel, benefits, heroImage, cheapestRoom] = await Promise.all([
+  const [hotel, benefits, heroImage, cheapestRoom, rooms] = await Promise.all([
     fetchOrNull(db.hotel.findFirst()),
     fetchOrEmpty(db.benefit.findMany({ orderBy: { sortOrder: "asc" } })),
     fetchOrNull(
@@ -42,6 +43,16 @@ export default async function HomePage() {
       db.room.findFirst({
         where: { status: "PUBLISHED" },
         orderBy: { priceFrom: "asc" },
+      }),
+    ),
+    fetchOrEmpty(
+      db.room.findMany({
+        where: { status: "PUBLISHED" },
+        orderBy: { sortOrder: "asc" },
+        include: {
+          photos: { orderBy: { sortOrder: "asc" } },
+          amenities: true,
+        },
       }),
     ),
   ]);
@@ -70,6 +81,8 @@ export default async function HomePage() {
         <div id="booking" className="scroll-mt-24" />
 
         <Benefits benefits={benefits} />
+
+        <RoomList rooms={rooms} />
       </main>
     </>
   );
