@@ -1,0 +1,258 @@
+// Prisma schema — Hotel Direct Booking Landing Page & CMS
+// Lihat doc/02-data-model.md untuk detail setiap entity.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum PromotionStatus {
+  DRAFT
+  SCHEDULED
+  ACTIVE
+  EXPIRED
+}
+
+enum Role {
+  ADMIN
+  MARKETING
+  EDITOR
+  VIEWER
+}
+
+// ---------- Hotel & SEO ----------
+
+model Hotel {
+  id           String   @id @default(cuid())
+  name         String
+  logo         String?
+  tagline      String?
+  description  String?  @db.Text
+  story        String?  @db.Text
+  address      String?
+  phone        String?
+  email        String?
+  whatsapp     String?
+  socialLinks  Json?
+  lat          Float?
+  lng          Float?
+  checkInTime  String   @default("14:00")
+  checkOutTime String   @default("12:00")
+  currency     String   @default("IDR")
+  seo          SeoMeta?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model SeoMeta {
+  id             String  @id @default(cuid())
+  hotelId        String  @unique
+  hotel          Hotel   @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  metaTitle      String?
+  metaDescription String?
+  ogTitle        String?
+  ogDescription  String?
+  ogImage        String?
+  canonicalUrl   String?
+}
+
+// ---------- Rooms ----------
+
+model Room {
+  id                 String      @id @default(cuid())
+  slug               String      @unique
+  name               String
+  description        String?     @db.Text
+  sizeM2             Int?
+  maxOccupancy       Int?
+  bedType            String?
+  bedCount           Int?        @default(1)
+  view               String?
+  priceFrom          Decimal?    @db.Decimal(12, 2)
+  currency           String      @default("IDR")
+  breakfastIncluded  Boolean     @default(false)
+  status             ContentStatus @default(DRAFT)
+  amenities          RoomAmenity[]
+  photos             RoomPhoto[]
+  sortOrder          Int         @default(0)
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  @@index([status])
+}
+
+model RoomPhoto {
+  id        String @id @default(cuid())
+  roomId    String
+  room      Room   @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  url       String
+  altText   String
+  sortOrder Int    @default(0)
+
+  @@index([roomId])
+}
+
+model RoomAmenity {
+  id       String @id @default(cuid())
+  roomId   String
+  room     Room   @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  name     String
+  icon     String?
+
+  @@index([roomId])
+}
+
+model Amenity {
+  id          String   @id @default(cuid())
+  name        String
+  icon        String?
+  description String?
+  image       String?
+  group       String   @default("HOTEL") // HOTEL | ROOM
+  sortOrder   Int      @default(0)
+}
+
+// ---------- Gallery ----------
+
+model GalleryItem {
+  id        String   @id @default(cuid())
+  image     String
+  thumb     String?
+  altText   String
+  caption   String?
+  category  String   @default("ALL") // ALL|ROOMS|FACILITIES|DINING|EXTERIOR|SURROUNDINGS
+  status    ContentStatus @default(PUBLISHED)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([status, category])
+}
+
+// ---------- Promotions ----------
+
+model Promotion {
+  id                String          @id @default(cuid())
+  title             String
+  description       String?         @db.Text
+  image             String?
+  discountLabel     String?
+  promoCode         String?
+  bookingStart      DateTime?
+  bookingEnd        DateTime?
+  stayStart         DateTime?
+  stayEnd           DateTime?
+  terms             String?         @db.Text
+  ctaLabel          String?         @default("Book Now")
+  status            PromotionStatus @default(DRAFT)
+  scheduledPublishAt DateTime?
+  showCountdown     Boolean         @default(false)
+  sortOrder         Int             @default(0)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@index([status, bookingEnd])
+}
+
+// ---------- Reviews & Testimonials ----------
+
+model Testimonial {
+  id          String        @id @default(cuid())
+  guestName   String
+  country     String?
+  rating      Int           @default(5)
+  review      String        @db.Text
+  source      String?
+  status      ContentStatus @default(DRAFT)
+  publishedAt DateTime?     @db.Timestamp()
+  createdAt   DateTime      @default(now())
+
+  @@index([status])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  source    String
+  rating    Decimal  @db.Decimal(3, 2)
+  count     Int
+  url       String?
+  updatedAt DateTime @updatedAt
+}
+
+// ---------- Experiences ----------
+
+model Experience {
+  id          String        @id @default(cuid())
+  title       String
+  description String?       @db.Text
+  image       String?
+  duration    String?
+  priceFrom   Decimal?      @db.Decimal(12, 2)
+  ctaLabel    String?       @default("Book")
+  ctaUrl      String?
+  status      ContentStatus @default(DRAFT)
+  sortOrder   Int           @default(0)
+
+  @@index([status])
+}
+
+// ---------- Attractions & FAQ ----------
+
+model Attraction {
+  id            String  @id @default(cuid())
+  name          String
+  description   String? @db.Text
+  category      String?
+  distanceKm    Float?
+  travelTimeMin Int?
+  image         String?
+  lat           Float?
+  lng           Float?
+  sortOrder     Int     @default(0)
+}
+
+model FaqItem {
+  id        String @id @default(cuid())
+  question  String
+  answer    String @db.Text
+  category  String @default("BOOKING") // BOOKING|HOTEL|FACILITIES|FAMILY
+  sortOrder Int    @default(0)
+}
+
+// ---------- CMS Users & Audit ----------
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(EDITOR)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  auditLogs    AuditLog[]
+}
+
+model AuditLog {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  action       String
+  entity       String
+  entityId     String?
+  previousJson Json?
+  newJson      Json?
+  createdAt    DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([createdAt])
+}
