@@ -9,7 +9,7 @@ import {
 } from "@/lib/validators/booking";
 import { transition, validateSearch, type BookingState } from "@/lib/booking-states";
 import { buildBookingUrl } from "@/lib/booking-engine/deep-link";
-import { trackBookingStarted } from "@/lib/tracking";
+import { trackBookingStarted, trackEvent } from "@/lib/tracking";
 import type { AvailabilityResponse, RateOption } from "@/lib/booking-engine/types";
 import { formatCurrency } from "@/lib/format";
 import { EngineError } from "./EngineError";
@@ -106,6 +106,15 @@ export function BookingWidget({ whatsapp, phone, hotelCurrency = "IDR" }: Bookin
 
   async function search(values: WidgetSearchValues) {
     setState((s) => transition(s, { type: "SEARCH_START" }));
+    // ANA-003: track sebelum request agar event conversion funnel tercatat.
+    trackEvent("search_availability", {
+      checkin: values.checkIn,
+      checkout: values.checkOut,
+      adults: values.adults,
+      kids: values.kids,
+      rooms: values.rooms,
+      promo_code: values.promoCode || undefined,
+    });
     try {
       const params = new URLSearchParams({
         checkin: values.checkIn,
@@ -203,6 +212,16 @@ export function BookingWidget({ whatsapp, phone, hotelCurrency = "IDR" }: Bookin
     );
   }
 
+  function handleSelect(roomId: string) {
+    if (selectedId === roomId) return; // hindari event duplikat di analytics
+    // ANA-003: pilihan kamar — langkah funnel sebelum booking_started.
+    trackEvent("select_room", {
+      room_id: roomId,
+      room_name: rates.find((r) => r.roomId === roomId)?.roomName,
+    });
+    setSelectedId(roomId);
+  }
+
   const selectedRate = rates.find((r) => r.roomId === selectedId) ?? null;
   const loading = state === "loading" || state === "validating";
 
@@ -298,7 +317,7 @@ export function BookingWidget({ whatsapp, phone, hotelCurrency = "IDR" }: Bookin
                   nights={nights}
                   hotelCurrency={hotelCurrency}
                   selectedId={selectedId}
-                  onSelect={setSelectedId}
+                  onSelect={handleSelect}
                 />
 
                 {selectedRate && (

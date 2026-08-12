@@ -1,17 +1,20 @@
 import type { BookingEngineAdapter } from "./types";
 import { MockAdapter } from "./mock";
 import { CloudbedsAdapter } from "./cloudbeds";
+import { assertProviderAllowed } from "./provider-guard";
+
+export { assertProviderAllowed } from "./provider-guard";
 
 /**
  * Factory engine (BK-002) — UI tidak pernah tahu provider mana yang aktif.
  *
  *   BOOKING_ENGINE_PROVIDER=cloudbeds → CloudbedsAdapter (production)
  *   (default) / mock                  → MockAdapter (dev & E2E)
- *
- * Provider "mock" dilarang di production (REL-001) — verifikasi di deploy.
  */
 export function getEngine(): BookingEngineAdapter {
-  if (process.env.BOOKING_ENGINE_PROVIDER === "cloudbeds") {
+  const provider = process.env.BOOKING_ENGINE_PROVIDER;
+  assertProviderAllowed(provider);
+  if (provider === "cloudbeds") {
     return new CloudbedsAdapter();
   }
   return new MockAdapter();
