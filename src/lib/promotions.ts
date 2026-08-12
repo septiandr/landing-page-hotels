@@ -32,11 +32,19 @@ export function isPromotionVisible(promo: PromotionTimeInfo, now: Date = new Dat
   return getPromotionStatus(promo, now) === "ACTIVE";
 }
 
-/** Query promotion aktif untuk landing page — logika waktu diterapkan di sini. */
-export async function getActivePromotions(now: Date = new Date()) {
+/**
+ * Query promotion untuk landing page — logika waktu diterapkan di sini.
+ * Saat `opts.preview` true (preview mode CMS-U-012) semua status ikut
+ * ditampilkan supaya draft/expired pun bisa direview.
+ */
+export async function getActivePromotions(
+  now: Date = new Date(),
+  opts: { preview?: boolean } = {},
+) {
   const promos = await db.promotion.findMany({
-    where: { status: { in: ["ACTIVE", "SCHEDULED"] } },
+    where: opts.preview ? {} : { status: { in: ["ACTIVE", "SCHEDULED"] } },
     orderBy: { sortOrder: "asc" },
   });
+  if (opts.preview) return promos;
   return promos.filter((promo) => isPromotionVisible(promo, now));
 }

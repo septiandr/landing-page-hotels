@@ -8,12 +8,14 @@ import { db } from "@/lib/db";
 
 export const getHotel = cache(async () => db.hotel.findFirst());
 
-export const getRoomBySlug = cache(async (slug: string) =>
-  db.room.findUnique({
-    where: { slug },
-    include: {
-      photos: { orderBy: { sortOrder: "asc" } },
-      amenities: true,
-    },
-  }),
+export const getRoomBySlug = cache(
+  async (slug: string, opts: { includeDrafts?: boolean } = {}) =>
+    db.room.findUnique({
+      // Hanya room PUBLISHED yang tampil publik — draft hanya lewat preview mode.
+      where: opts.includeDrafts ? { slug } : { slug, status: "PUBLISHED" },
+      include: {
+        photos: { orderBy: { sortOrder: "asc" } },
+        amenities: true,
+      },
+    }),
 );

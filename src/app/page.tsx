@@ -5,9 +5,15 @@ import { Benefits } from "@/components/landing/Benefits";
 import { RoomList } from "@/components/landing/RoomList";
 import { Gallery } from "@/components/landing/Gallery";
 import { Amenities } from "@/components/landing/Amenities";
+import { PreviewBanner } from "@/components/landing/preview-banner";
+import { isPreviewMode } from "@/lib/preview";
 
 // Landing page M2: section berikutnya menyusul (LP-005..LP-019).
 export const dynamic = "force-dynamic";
+
+interface HomePageProps {
+  searchParams: Promise<{ preview?: string }>;
+}
 
 /** Helper: graceful fallback dengan logging — error DB tidak menggagalkan landing page. */
 async function fetchOrNull<T>(promise: Promise<T>): Promise<T | null> {
@@ -28,29 +34,31 @@ async function fetchOrEmpty<T>(promise: Promise<T[]>): Promise<T[]> {
   }
 }
 
-export default async function HomePage() {
+export default async function HomePage({ searchParams }: HomePageProps) {
+  // Preview mode (CMS-U-012): tampilkan draft hanya dengan ?preview=1 + session valid.
+  const preview = await isPreviewMode(await searchParams);
+
   const [hotel, benefits, heroImage, cheapestRoom, rooms, galleryItems, amenities] =
     await Promise.all([
     fetchOrNull(db.hotel.findFirst()),
     fetchOrEmpty(db.benefit.findMany({ orderBy: { sortOrder: "asc" } })),
     fetchOrNull(
       db.galleryItem.findFirst({
-        where: {
-          status: "PUBLISHED",
-          category: { in: ["EXTERIOR", "SURROUNDINGS", "ALL"] },
-        },
+        where: preview
+          ? { category: { in: ["EXTERIOR", "SURROUNDINGS", "ALL"] } }
+          : { status: "PUBLISHED", category: { in: ["EXTERIOR", "SURROUNDINGS", "ALL"] } },
         orderBy: { sortOrder: "asc" },
       }),
     ),
     fetchOrNull(
       db.room.findFirst({
-        where: { status: "PUBLISHED" },
+        where: preview ? {} : { status: "PUBLISHED" },
         orderBy: { priceFrom: "asc" },
       }),
     ),
     fetchOrEmpty(
       db.room.findMany({
-        where: { status: "PUBLISHED" },
+        where: preview ? {} : { status: "PUBLISHED" },
         orderBy: { sortOrder: "asc" },
         include: {
           photos: { orderBy: { sortOrder: "asc" } },
@@ -60,7 +68,7 @@ export default async function HomePage() {
     ),
     fetchOrEmpty(
       db.galleryItem.findMany({
-        where: { status: "PUBLISHED" },
+        where: preview ? {} : { status: "PUBLISHED" },
         orderBy: { sortOrder: "asc" },
       }),
     ),
@@ -74,6 +82,7 @@ export default async function HomePage() {
 
   return (
     <>
+      {preview ? <PreviewBanner /> : null}
       <Header hotelName={hotelName} />
       <main>
         <Hero

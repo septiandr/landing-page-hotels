@@ -13,32 +13,28 @@ import {
   Ruler,
   Users,
 } from "lucide-react";
-import { db } from "@/lib/db";
 import { getHotel, getRoomBySlug } from "@/lib/data";
 import { formatCurrency } from "@/lib/format";
 import { buildAvailabilityUrl } from "@/lib/booking/url";
 import { Header } from "@/components/landing/Header";
+import { PreviewBanner } from "@/components/landing/preview-banner";
+import { isPreviewMode } from "@/lib/preview";
 
 interface RoomPageProps {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ preview?: string }>;
 }
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
-// ISR: refresh halaman room setiap 1 jam + on-demand saat CMS publish (CMS-B-010).
-export const revalidate = 3600;
+// Halaman dynamic: membaca searchParams untuk preview mode (CMS-U-012) —
+// update konten selalu segar (target < 5 menit, PRD §61).
 
-export async function generateStaticParams() {
-  const rooms = await db.room.findMany({
-    where: { status: "PUBLISHED" },
-    select: { slug: true },
-  });
-  return rooms.map((room) => ({ slug: room.slug }));
-}
-
-export async function generateMetadata({ params }: RoomPageProps): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: RoomPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const [room, hotel] = await Promise.all([getRoomBySlug(slug), getHotel()]);
+  const preview = await isPreviewMode(await searchParams);
+  const room = await getRoomBySlug(slug, { includeDrafts: preview });
+  const hotel = await getHotel();
   if (!room) return { title: "Kamar tidak ditemukan" };
 
   const ogImage = room.photos[0]?.url;
@@ -54,10 +50,14 @@ export async function generateMetadata({ params }: RoomPageProps): Promise<Metad
   };
 }
 
-export default async function RoomPage({ params }: RoomPageProps) {
+export default async function RoomPage({ params, searchParams }: RoomPageProps) {
   const { slug } = await params;
+  const preview = await isPreviewMode(await searchParams);
 
-  const [room, hotel] = await Promise.all([getRoomBySlug(slug), getHotel()]);
+  const [room, hotel] = await Promise.all([
+    getRoomBySlug(slug, { includeDrafts: preview }),
+    getHotel(),
+  ]);
 
   if (!room) notFound();
 
@@ -73,6 +73,7 @@ export default async function RoomPage({ params }: RoomPageProps) {
 
   return (
     <>
+      {preview ? <PreviewBanner backHref={`/rooms/${slug}`} /> : null}
       <Header hotelName={hotel?.name ?? "Hotel"} />
       <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
         <Link
