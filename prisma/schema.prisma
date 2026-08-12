@@ -205,6 +205,16 @@ model Experience {
   @@index([status])
 }
 
+// ---------- Direct Booking Benefits (PRD §10) ----------
+
+model Benefit {
+  id          String  @id @default(cuid())
+  icon        String? // nama ikon lucide, mis. "BadgePercent"
+  title       String
+  description String?
+  sortOrder   Int     @default(0)
+}
+
 // ---------- Attractions & FAQ ----------
 
 model Attraction {

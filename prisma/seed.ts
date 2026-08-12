@@ -59,6 +59,7 @@ async function main() {
   await prisma.testimonial.deleteMany();
   await prisma.review.deleteMany();
   await prisma.experience.deleteMany();
+  await prisma.benefit.deleteMany();
   await prisma.attraction.deleteMany();
   await prisma.faqItem.deleteMany();
 
@@ -361,6 +362,19 @@ async function main() {
     ],
   });
   console.log("  ✔ experiences");
+
+  // ---------- Direct Booking Benefits ----------
+  await prisma.benefit.createMany({
+    data: [
+      { icon: "BadgePercent", title: "Best Available Rate", description: "Harga terbaik langsung dari hotel, tanpa komisi OTA.", sortOrder: 1 },
+      { icon: "Coffee", title: "Free Breakfast", description: "Sarapan gratis untuk setiap booking langsung.", sortOrder: 2 },
+      { icon: "Wine", title: "Welcome Drink", description: "Minuman sambutan khas Yogyakarta saat check-in.", sortOrder: 3 },
+      { icon: "CalendarCheck2", title: "Flexible Cancellation", description: "Ubah atau batalkan reservasi lebih fleksibel.", sortOrder: 4 },
+      { icon: "Clock3", title: "Early Check-in", description: "Early check-in & late check-out sesuai ketersediaan.", sortOrder: 5 },
+      { icon: "Gift", title: "Exclusive Offers", description: "Akses promo khusus yang hanya ada di website resmi.", sortOrder: 6 },
+    ],
+  });
+  console.log("  ✔ benefits");
 
   // ---------- Attractions ----------
   await prisma.attraction.createMany({
