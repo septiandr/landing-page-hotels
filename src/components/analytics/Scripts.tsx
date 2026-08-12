@@ -1,9 +1,12 @@
 import Script from "next/script";
 import { env } from "@/lib/env";
+import { ConsentGate } from "./ConsentGate";
 
 /**
  * ANA-001/ANA-002 — Script analytics di root layout.
- * Hanya dimuat jika env terisi (jangan load script kosong di dev).
+ * Hanya dimuat jika env terisi (jangan load script kosong di dev) DAN setelah
+ * consent diterima (SEC-004): script dibungkus ConsentGate yang tidak mount
+ * children sampai user klik "Terima".
  *
  * - GTM: dataLayer + gtm.js (jika NEXT_PUBLIC_GTM_ID ada).
  * - GA4: gtag langsung (jika NEXT_PUBLIC_GA4_ID ada dan GTM tidak dipakai).
@@ -11,7 +14,6 @@ import { env } from "@/lib/env";
  * - TikTok Pixel: ttq load + page.
  *
  * Semua script pakai `afterInteractive` (bukan blocking render).
- * Consent mode (SEC-004, doc/08) menyusul bila cookie banner dibutuhkan.
  */
 export function AnalyticsScripts() {
   const gtmId = env.NEXT_PUBLIC_GTM_ID;
@@ -22,7 +24,7 @@ export function AnalyticsScripts() {
   if (!gtmId && !ga4Id && !metaId && !tiktokId) return null;
 
   return (
-    <>
+    <ConsentGate>
       {gtmId ? (
         <>
           <Script id="gtm-init" strategy="afterInteractive">
@@ -75,6 +77,6 @@ var s=d.getElementsByTagName(t)[0];var p=d.createElement(t);p.async=!0;p.src="ht
 s.parentNode.insertBefore(p,s)}(window,document,'script','ttq');ttq.load('${tiktokId}');ttq.page();`}
         </Script>
       ) : null}
-    </>
+    </ConsentGate>
   );
 }

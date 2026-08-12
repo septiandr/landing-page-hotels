@@ -13,7 +13,8 @@ export function Benefits({ benefits }: { benefits: Benefit[] }) {
         <h2 className="mt-3 text-center font-display text-3xl font-semibold text-ink sm:text-4xl">
           Why Book Direct?
         </h2>
-        <p className="mx-auto mt-4 max-w-xl text-center text-base text-muted">
+        {/* A11Y: text-ink-soft — text-muted (4.4:1) di bawah AA di atas bg-surface-muted. */}
+        <p className="mx-auto mt-4 max-w-xl text-center text-base text-ink-soft">
           Booking langsung melalui website resmi memberi kamu lebih banyak nilai dibanding OTA.
         </p>
 

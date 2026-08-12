@@ -97,7 +97,8 @@ export function RoomCard({ room }: { room: RoomWithRelations }) {
               </li>
             ))}
             {extraAmenities > 0 && (
-              <li className="rounded-full bg-surface-muted px-2.5 py-1 text-xs font-medium text-muted">
+              /* A11Y: text-ink-soft — text-muted (4.4:1) di bawah AA 4.5:1 di atas bg-surface-muted. */
+              <li className="rounded-full bg-surface-muted px-2.5 py-1 text-xs font-medium text-ink-soft">
                 +{extraAmenities} lainnya
               </li>
             )}

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { CalendarCheck2 } from "lucide-react";
 import { EVENTS, track } from "@/lib/analytics";
 
@@ -20,12 +21,16 @@ export function FinalCta({ backgroundImage }: { backgroundImage?: string | null 
       aria-labelledby="final-cta-title"
     >
       {backgroundImage && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
+        /* PERF-001: next/image (optimized + lazy) — img mentah mengunduh
+         * file besar langsung dari Unsplash & memblokir LCP. */
+        <Image
           src={backgroundImage}
           alt=""
           aria-hidden
-          className="absolute inset-0 h-full w-full object-cover opacity-20"
+          fill
+          sizes="100vw"
+          loading="lazy"
+          className="object-cover opacity-20"
         />
       )}
       <div className="relative mx-auto max-w-3xl px-4 text-center sm:px-6">

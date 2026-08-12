@@ -43,7 +43,8 @@ export function Amenities({ amenities }: { amenities: Amenity[] }) {
                   </div>
                   <div>
                     <h3 className="font-display text-lg font-semibold text-ink">{meta.label}</h3>
-                    <p className="text-sm text-muted">{meta.sub}</p>
+                    {/* A11Y: text-ink-soft — text-muted (4.4:1) di bawah AA di atas bg-surface-muted. */}
+                    <p className="text-sm text-ink-soft">{meta.sub}</p>
                   </div>
                 </div>
 
