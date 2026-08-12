@@ -2,6 +2,6 @@ import { GenericCrudPage } from "@/components/admin/generic-crud";
 
 export const dynamic = "force-dynamic";
 
-export default function AttractionsPage() {
-  return <GenericCrudPage module="attractions" />;
+export default function AwardsPage() {
+  return <GenericCrudPage module="awards" />;
 }

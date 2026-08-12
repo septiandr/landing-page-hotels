@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm, type Resolver } from "react-hook-form";
@@ -17,13 +17,19 @@ import { Button, Card, EmptyState, FieldError, Input, Label, Select, Skeleton, S
 import { ConfirmDialog } from "./confirm-dialog";
 import { ImageUploader } from "./image-uploader";
 import { useToast } from "./toast";
-import type { CrudField, CrudModuleConfig } from "./crud-config";
+import { CRUD_CONFIGS } from "./crud-configs";
+import type { CrudField } from "./crud-config";
 
 type Row = Record<string, unknown>;
 
+type ModuleKey = keyof typeof CRUD_CONFIGS;
+
 /* ============================ LIST ============================ */
 
-export function GenericCrudPage({ config }: { config: CrudModuleConfig }) {
+export function GenericCrudPage({ module: moduleKey }: { module: ModuleKey }) {
+  // Config (berisi zod schema + render function) di-resolve di sisi client —
+  // tidak boleh diseberangkan dari server component (RSC serialization).
+  const config = CRUD_CONFIGS[moduleKey];
   const { toast } = useToast();
   const [items, setItems] = useState<Row[]>([]);
   const [pagination, setPagination] = useState({ page: 1, limit: 20, total: 0, totalPages: 0 });
@@ -257,13 +263,13 @@ export function GenericCrudPage({ config }: { config: CrudModuleConfig }) {
 /* ============================ FORM ============================ */
 
 interface GenericCrudFormProps {
-  config: CrudModuleConfig;
+  module: ModuleKey;
   mode: "create" | "edit";
   initial?: Row;
   id?: string;
 }
 
-function buildDefaults(config: CrudModuleConfig, initial?: Row): Record<string, unknown> {
+function buildDefaults(config: (typeof CRUD_CONFIGS)[ModuleKey], initial?: Row): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   for (const field of config.fields) {
     if (field.showInForm === false) continue;
@@ -272,7 +278,7 @@ function buildDefaults(config: CrudModuleConfig, initial?: Row): Record<string, 
   return out;
 }
 
-function buildPayload(config: CrudModuleConfig, values: Record<string, unknown>): Record<string, unknown> {
+function buildPayload(config: (typeof CRUD_CONFIGS)[ModuleKey], values: Record<string, unknown>): Record<string, unknown> {
   const payload: Record<string, unknown> = {};
   for (const field of config.fields) {
     if (field.showInForm === false) continue;
@@ -286,9 +292,10 @@ function buildPayload(config: CrudModuleConfig, values: Record<string, unknown>)
   return payload;
 }
 
-export function GenericCrudForm({ config, mode, initial, id }: GenericCrudFormProps) {
+export function GenericCrudForm({ module: moduleKey, mode, initial, id }: GenericCrudFormProps) {
   const router = useRouter();
   const { toast } = useToast();
+  const config = CRUD_CONFIGS[moduleKey];
   const schema = mode === "create" ? config.createSchema : config.updateSchema;
   const defaultValues = useMemo(() => buildDefaults(config, initial), [config, initial]);
 
@@ -440,37 +447,4 @@ export function GenericCrudForm({ config, mode, initial, id }: GenericCrudFormPr
   );
 }
 
-/* ==================== Table cell helpers ==================== */
 
-export function MoneyCell({ value, currency = "IDR" }: { value: unknown; currency?: string }) {
-  if (value == null || value === "") return <span className="text-ink-soft">-</span>;
-  const n = Number(value);
-  if (Number.isNaN(n)) return <span>{String(value)}</span>;
-  return (
-    <span>
-      {new Intl.NumberFormat("id-ID", {
-        style: "currency",
-        currency,
-        maximumFractionDigits: 0,
-      }).format(n)}
-    </span>
-  );
-}
-
-export function StarsCell({ value }: { value: unknown }) {
-  const n = Number(value);
-  if (Number.isNaN(n)) return <span>-</span>;
-  return <span>{"★".repeat(Math.max(0, Math.min(5, n)))}</span>;
-}
-
-export function ImageCell({ value }: { value: unknown }) {
-  if (!value) return <span className="text-ink-soft">-</span>;
-  return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img src={String(value)} alt="" className="h-10 w-16 rounded-md object-cover" loading="lazy" />
-  );
-}
-
-export function cellRenderer(render?: (row: Row) => ReactNode) {
-  return render;
-}

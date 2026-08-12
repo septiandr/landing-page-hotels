@@ -222,6 +222,31 @@ model Benefit {
   sortOrder   Int     @default(0)
 }
 
+// ---------- Awards & Transportation ----------
+
+/// Penghargaan hotel (LP-012, PRD §22) — nama, issuer, tahun, logo.
+model Award {
+  id        String  @id @default(cuid())
+  name      String
+  issuer    String?
+  year      Int?
+  logo      String?
+  sortOrder Int     @default(0)
+}
+
+/// Opsi transportasi (PRD §25) — airport transfer, taxi, train, dst.
+/// Konten bebas dari CMS: ikon, deskripsi, harga mulai, CTA (mis. wa.me).
+model TransportOption {
+  id          String   @id @default(cuid())
+  title       String
+  description String?  @db.Text
+  icon        String?
+  priceFrom   Decimal? @db.Decimal(12, 2)
+  ctaLabel    String?
+  ctaUrl      String?
+  sortOrder   Int      @default(0)
+}
+
 // ---------- Attractions & FAQ ----------
 
 model Attraction {

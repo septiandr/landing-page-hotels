@@ -1,93 +1,96 @@
-import { Car, MapPin, MessageCircle, Plane, Train } from "lucide-react";
+import { MapPin } from "lucide-react";
+import type { TransportOption } from "@/generated/prisma/client";
+import { getIcon } from "./icon-map";
+import { formatCurrency } from "@/lib/format";
 
 /**
  * LP-014 — Transportation (PRD §25).
- *
- * Catatan: doc/02 data model belum punya entitas "Transport" (text blocks CMS).
- * Section ini di-render HANYA jika ada kontak hotel yang valid, dan mengarahkan
- * guest ke konfirmasi airport transfer via WhatsApp + tombol Directions.
- * Opsi transportasi penuh (taxi, ride-hailing, train, car rental) menyusul
- * ketika model CMS tersedia — sesuai prinsip "render hanya jika ada konten".
+ * Opsi transportasi kini 100% dari CMS (model TransportOption): ikon, judul,
+ * deskripsi, harga mulai, dan CTA (mis. wa.me). Plus card "Getting Here"
+ * dengan alamat & link Google Maps dari data hotel.
+ * Section tidak dirender jika tidak ada konten.
  */
 export function Transportation({
+  transports,
   address,
-  whatsapp,
+  hotelCurrency = "IDR",
 }: {
+  transports: TransportOption[];
   address?: string | null;
-  whatsapp?: string | null;
+  hotelCurrency?: string;
 }) {
-  if (!whatsapp && !address) return null;
-
-  const waNumber = whatsapp?.replace(/^\+/, "");
+  if (transports.length === 0 && !address) return null;
 
   return (
     <section id="transportation" className="bg-surface py-16 sm:py-20">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="grid gap-6 lg:grid-cols-3">
-          <div className="rounded-2xl border border-border bg-white p-6">
-            <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-50 text-primary-700">
-              <Plane className="h-5 w-5" aria-hidden />
-            </span>
-            <h3 className="mt-4 font-display text-lg font-semibold text-ink">
-              Airport Transfer
-            </h3>
-            <p className="mt-2 text-sm leading-relaxed text-muted">
-              Kami bantu jemput dari Bandara Yogyakarta (YIA) dengan tarif
-              transparan — konfirmasi dulu via WhatsApp.
-            </p>
-            {waNumber && (
-              <a
-                href={`https://wa.me/${waNumber}?text=${encodeURIComponent("Halo, saya ingin memesan airport transfer dari Bandara YIA. Mohon info tarif & ketersediaan.")}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-4 inline-flex h-10 items-center gap-2 rounded-lg bg-primary-700 px-4 text-sm font-medium text-white transition hover:bg-primary-800"
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {transports.map((option) => {
+            const Icon = getIcon(option.icon);
+            return (
+              <div
+                key={option.id}
+                className="flex flex-col rounded-2xl border border-border bg-white p-6"
               >
-                <MessageCircle className="h-4 w-4" aria-hidden /> Book Airport Transfer
-              </a>
-            )}
-          </div>
-
-          <div className="rounded-2xl border border-border bg-white p-6">
-            <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-50 text-primary-700">
-              <Car className="h-5 w-5" aria-hidden />
-            </span>
-            <h3 className="mt-4 font-display text-lg font-semibold text-ink">
-              Taxi &amp; Ride-hailing
-            </h3>
-            <p className="mt-2 text-sm leading-relaxed text-muted">
-              Stasiun Tugu dan Malioboro dapat dicapai dengan mudah — tanya
-              resepsionis untuk rekomendasi & tarif terbaik.
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-border bg-white p-6">
-            <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-50 text-primary-700">
-              <Train className="h-5 w-5" aria-hidden />
-            </span>
-            <h3 className="mt-4 font-display text-lg font-semibold text-ink">
-              Train &amp; Getting Here
-            </h3>
-            <p className="mt-2 text-sm leading-relaxed text-muted">
-              {address ? (
-                <span className="flex items-start gap-1.5">
-                  <MapPin size={15} aria-hidden className="mt-0.5 shrink-0 text-primary-700" />
-                  {address}
+                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-50 text-primary-700">
+                  <Icon className="h-5 w-5" aria-hidden />
                 </span>
-              ) : (
-                "Hubungi kami untuk panduan arah menuju hotel."
-              )}
-            </p>
-            {address && (
-              <a
-                href={`https://maps.google.com/?q=${encodeURIComponent(address)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-4 inline-flex h-10 items-center justify-center rounded-lg border border-border text-sm font-medium text-ink transition hover:bg-surface-muted"
-              >
-                Open in Google Maps
-              </a>
-            )}
-          </div>
+                <h3 className="mt-4 font-display text-lg font-semibold text-ink">
+                  {option.title}
+                </h3>
+                {option.description && (
+                  <p className="mt-2 text-sm leading-relaxed text-muted">
+                    {option.description}
+                  </p>
+                )}
+                <div className="mt-auto pt-4">
+                  {option.priceFrom != null && (
+                    <p className="text-sm text-muted">
+                      From{" "}
+                      <span className="text-lg font-semibold text-ink">
+                        {formatCurrency(Number(option.priceFrom), hotelCurrency)}
+                      </span>
+                    </p>
+                  )}
+                  {option.ctaUrl && (
+                    <a
+                      href={option.ctaUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-3 inline-flex h-10 items-center justify-center rounded-lg bg-primary-700 px-4 text-sm font-medium text-white transition hover:bg-primary-800"
+                    >
+                      {option.ctaLabel || "Book Now"}
+                    </a>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+
+          {address && (
+            <div className="flex flex-col rounded-2xl border border-border bg-white p-6">
+              <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-50 text-primary-700">
+                <MapPin className="h-5 w-5" aria-hidden />
+              </span>
+              <h3 className="mt-4 font-display text-lg font-semibold text-ink">
+                Getting Here
+              </h3>
+              <p className="mt-2 flex items-start gap-1.5 text-sm leading-relaxed text-muted">
+                <MapPin size={15} aria-hidden className="mt-0.5 shrink-0 text-primary-700" />
+                {address}
+              </p>
+              <div className="mt-auto pt-4">
+                <a
+                  href={`https://maps.google.com/?q=${encodeURIComponent(address)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex h-10 items-center justify-center rounded-lg border border-border text-sm font-medium text-ink transition hover:bg-surface-muted"
+                >
+                  Open in Google Maps
+                </a>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </section>

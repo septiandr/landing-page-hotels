@@ -61,6 +61,8 @@ async function main() {
   await prisma.experience.deleteMany();
   await prisma.benefit.deleteMany();
   await prisma.attraction.deleteMany();
+  await prisma.award.deleteMany();
+  await prisma.transportOption.deleteMany();
   await prisma.faqItem.deleteMany();
 
   // ---------- Users (CMS) ----------
@@ -386,6 +388,46 @@ async function main() {
     ],
   });
   console.log("  ✔ attractions");
+
+  // ---------- Awards (LP-012) ----------
+  await prisma.award.createMany({
+    data: [
+      { name: "Travelers' Choice", issuer: "TripAdvisor", year: 2025, logo: IMG.exterior, sortOrder: 1 },
+      { name: "Guest Review Award", issuer: "Booking.com", year: 2024, logo: IMG.lobby, sortOrder: 2 },
+      { name: "Top Rated Hotel", issuer: "Google", year: 2025, sortOrder: 3 },
+    ],
+  });
+  console.log("  ✔ awards");
+
+  // ---------- Transportation (PRD §25) ----------
+  await prisma.transportOption.createMany({
+    data: [
+      {
+        title: "Airport Transfer",
+        description: "Jemput dari Bandara Yogyakarta (YIA) dengan tarif transparan — konfirmasi dulu via WhatsApp.",
+        icon: "Plane",
+        priceFrom: 150000,
+        ctaLabel: "Book Airport Transfer",
+        ctaUrl: "https://wa.me/6281234567890?text=" + encodeURIComponent("Halo, saya ingin memesan airport transfer dari Bandara YIA. Mohon info tarif & ketersediaan."),
+        sortOrder: 1,
+      },
+      {
+        title: "Taxi & Ride-hailing",
+        description: "Stasiun Tugu dan Malioboro dapat dicapai dengan mudah — tanya resepsionis untuk rekomendasi & tarif terbaik.",
+        icon: "Car",
+        sortOrder: 2,
+      },
+      {
+        title: "Train & Local Bus",
+        description: "Koneksi KA Prameks ke Stasiun Tugu, plus bus Trans Jogja yang melintasi Malioboro.",
+        icon: "Train",
+        ctaLabel: "Ask via WhatsApp",
+        ctaUrl: "https://wa.me/6281234567890",
+        sortOrder: 3,
+      },
+    ],
+  });
+  console.log("  ✔ transport");
 
   // ---------- FAQ ----------
   await prisma.faqItem.createMany({

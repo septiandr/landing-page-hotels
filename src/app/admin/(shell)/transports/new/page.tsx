@@ -2,6 +2,6 @@ import { GenericCrudForm } from "@/components/admin/generic-crud";
 
 export const dynamic = "force-dynamic";
 
-export default function NewExperiencePage() {
-  return <GenericCrudForm module="experiences" mode="create" />;
+export default function NewTransportPage() {
+  return <GenericCrudForm module="transports" mode="create" />;
 }

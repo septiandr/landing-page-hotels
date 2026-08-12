@@ -5,10 +5,12 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { signOut } from "next-auth/react";
 import {
+  Award,
   BedDouble,
   BookOpenText,
   Building2,
   CalendarClock,
+  CarFront,
   FileText,
   Images,
   LayoutDashboard,
@@ -41,6 +43,8 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/admin/testimonials", label: "Testimonials", icon: MessageSquareQuote, permission: "content" },
   { href: "/admin/experiences", label: "Experiences", icon: Sparkles, permission: "content" },
   { href: "/admin/attractions", label: "Attractions", icon: MapPin, permission: "content" },
+  { href: "/admin/awards", label: "Awards", icon: Award, permission: "content" },
+  { href: "/admin/transports", label: "Transportation", icon: CarFront, permission: "content" },
   { href: "/admin/faqs", label: "FAQ", icon: BookOpenText, permission: "content" },
   { href: "/admin/amenities", label: "Amenities", icon: Building2, permission: "content" },
   { href: "/admin/settings/hotel", label: "Hotel Profile", icon: Settings, permission: "settings" },

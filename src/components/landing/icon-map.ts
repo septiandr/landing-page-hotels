@@ -1,6 +1,9 @@
 import {
+  Award,
   BadgePercent,
   BedDouble,
+  Bike,
+  Bus,
   CalendarCheck2,
   Car,
   Clock3,
@@ -13,8 +16,10 @@ import {
   Presentation,
   Refrigerator,
   Shield,
+  Ship,
   Snowflake,
   Sparkles,
+  Train,
   Tv,
   UtensilsCrossed,
   Waves,
@@ -26,8 +31,11 @@ import {
 
 /** Mapping nama ikon dari CMS (field `icon`) ke komponen lucide. */
 export const ICONS: Record<string, LucideIcon> = {
+  Award,
   BadgePercent,
   BedDouble,
+  Bike,
+  Bus,
   CalendarCheck2,
   Car,
   Clock3,
@@ -40,7 +48,9 @@ export const ICONS: Record<string, LucideIcon> = {
   Presentation,
   Refrigerator,
   Shield,
+  Ship,
   Snowflake,
+  Train,
   Tv,
   UtensilsCrossed,
   Waves,

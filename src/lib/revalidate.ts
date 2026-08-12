@@ -11,6 +11,8 @@ export const CONTENT_TAGS = [
   "reviews",
   "experiences",
   "attractions",
+  "awards",
+  "transports",
 ] as const;
 
 export type ContentTag = (typeof CONTENT_TAGS)[number];
@@ -26,6 +28,8 @@ export const TAG_BY_ENTITY: Record<string, ContentTag> = {
   Testimonial: "reviews",
   Experience: "experiences",
   Attraction: "attractions",
+  Award: "awards",
+  TransportOption: "transports",
 };
 
 /**

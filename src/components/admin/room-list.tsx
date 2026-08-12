@@ -7,7 +7,7 @@ import { CONTENT_STATUSES } from "@/lib/validators";
 import { apiDelete, apiFetch } from "./api";
 import { Button, Card, EmptyState, Input, Select, Skeleton, StatusBadge } from "./ui";
 import { ConfirmDialog } from "./confirm-dialog";
-import { MoneyCell } from "./generic-crud";
+import { MoneyCell } from "./cell-helpers";
 import { useToast } from "./toast";
 
 interface RoomRow {

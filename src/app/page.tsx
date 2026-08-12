@@ -11,6 +11,7 @@ import { Promotions } from "@/components/landing/Promotions";
 import { Reviews } from "@/components/landing/Reviews";
 import { Location } from "@/components/landing/Location";
 import { Attractions } from "@/components/landing/Attractions";
+import { Awards } from "@/components/landing/Awards";
 import { Transportation } from "@/components/landing/Transportation";
 import { Faq } from "@/components/landing/Faq";
 import { FinalCta } from "@/components/landing/FinalCta";
@@ -68,6 +69,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     reviews,
     experiences,
     attractions,
+    awards,
+    transports,
     faqItems,
     promotions,
   ] = await Promise.all([
@@ -118,6 +121,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       }),
     ),
     fetchOrEmpty(db.attraction.findMany({ orderBy: { sortOrder: "asc" } })),
+    fetchOrEmpty(db.award.findMany({ orderBy: { sortOrder: "asc" } })),
+    fetchOrEmpty(db.transportOption.findMany({ orderBy: { sortOrder: "asc" } })),
     fetchOrEmpty(db.faqItem.findMany({ orderBy: { sortOrder: "asc" } })),
     getActivePromotions(now, { preview }).catch(() => []),
   ]);
@@ -211,6 +216,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
         <Reviews reviews={reviews} testimonials={testimonials} />
 
+        <Awards awards={awards} />
+
         <Location
           lat={hotel?.lat}
           lng={hotel?.lng}
@@ -220,7 +227,11 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
         <Attractions attractions={attractions} />
 
-        <Transportation address={hotel?.address} whatsapp={whatsapp} />
+        <Transportation
+          transports={transports}
+          address={hotel?.address}
+          hotelCurrency={currency}
+        />
 
         <Faq items={faqItems} />
 

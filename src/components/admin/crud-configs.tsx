@@ -4,17 +4,21 @@ import {
   FAQ_CATEGORIES,
   createAmenitySchema,
   createAttractionSchema,
+  createAwardSchema,
   createExperienceSchema,
   createFaqItemSchema,
   createTestimonialSchema,
+  createTransportSchema,
   updateAmenitySchema,
   updateAttractionSchema,
+  updateAwardSchema,
   updateExperienceSchema,
   updateFaqItemSchema,
   updateTestimonialSchema,
+  updateTransportSchema,
 } from "@/lib/validators";
 import type { CrudModuleConfig } from "./crud-config";
-import { ImageCell, MoneyCell, StarsCell } from "./generic-crud";
+import { ImageCell, MoneyCell, StarsCell } from "./cell-helpers";
 
 const statusOptions = CONTENT_STATUSES.map((s) => ({ label: s, value: s }));
 
@@ -154,6 +158,59 @@ export const faqConfig: CrudModuleConfig = {
   ],
 };
 
+/* ---------- Awards (LP-012) ---------- */
+
+export const awardConfig: CrudModuleConfig = {
+  title: "Awards",
+  entityLabel: "Penghargaan",
+  apiPath: "/api/admin/awards",
+  pagePath: "/admin/awards",
+  searchFields: ["name", "issuer"],
+  createSchema: createAwardSchema,
+  updateSchema: updateAwardSchema,
+  orderField: "sortOrder",
+  fields: [
+    { name: "name", label: "Nama Penghargaan", type: "text", required: true },
+    { name: "issuer", label: "Pemberi", type: "text", placeholder: "TripAdvisor / Booking.com…" },
+    { name: "year", label: "Tahun", type: "number", min: 1900, max: 2100, step: 1 },
+    { name: "logo", label: "Logo", type: "image" },
+    { name: "sortOrder", label: "Urutan", type: "number", min: 0 },
+  ],
+  columns: [
+    { key: "logo", label: "Logo", render: (r) => <ImageCell value={r.logo} /> },
+    { key: "name", label: "Penghargaan" },
+    { key: "issuer", label: "Pemberi" },
+    { key: "year", label: "Tahun" },
+  ],
+};
+
+/* ---------- Transportation (PRD §25) ---------- */
+
+export const transportConfig: CrudModuleConfig = {
+  title: "Transportation",
+  entityLabel: "Transportasi",
+  apiPath: "/api/admin/transports",
+  pagePath: "/admin/transports",
+  searchFields: ["title"],
+  createSchema: createTransportSchema,
+  updateSchema: updateTransportSchema,
+  orderField: "sortOrder",
+  fields: [
+    { name: "title", label: "Judul", type: "text", required: true, placeholder: "Airport Transfer" },
+    { name: "description", label: "Deskripsi", type: "textarea", full: true },
+    { name: "icon", label: "Ikon", type: "text", help: "Nama ikon Lucide, mis. Plane / Car / Train" },
+    { name: "priceFrom", label: "Harga Mulai", type: "number", step: 10000 },
+    { name: "ctaLabel", label: "Label CTA", type: "text", placeholder: "Book via WhatsApp" },
+    { name: "ctaUrl", label: "URL CTA", type: "text", placeholder: "https://wa.me/6281…" },
+    { name: "sortOrder", label: "Urutan", type: "number", min: 0 },
+  ],
+  columns: [
+    { key: "title", label: "Judul" },
+    { key: "icon", label: "Ikon" },
+    { key: "priceFrom", label: "Harga", render: (r) => <MoneyCell value={r.priceFrom} /> },
+  ],
+};
+
 /* ---------- Amenities ---------- */
 
 export const amenityConfig: CrudModuleConfig = {
@@ -194,6 +251,8 @@ export const CRUD_CONFIGS = {
   testimonials: testimonialConfig,
   experiences: experienceConfig,
   attractions: attractionConfig,
+  awards: awardConfig,
   faqs: faqConfig,
   amenities: amenityConfig,
+  transports: transportConfig,
 } as const;

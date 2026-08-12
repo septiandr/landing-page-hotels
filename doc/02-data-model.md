@@ -281,6 +281,42 @@ model AuditLog {
 
 ---
 
+## DATA-004b — Award, TransportOption (LP-012, PRD §25)
+
+**P0 · M · DB** — ditambahkan setelah doc/05 (LP-012 & section transport penuh di-CMS-kan).
+
+```prisma
+model Award {
+  id        String  @id @default(cuid())
+  name      String              // "Travelers' Choice"
+  issuer    String?             // "TripAdvisor"
+  year      Int?
+  logo      String?
+  sortOrder Int     @default(0)
+}
+
+model TransportOption {
+  id          String   @id @default(cuid())
+  title       String             // "Airport Transfer"
+  description String?  @db.Text
+  icon        String?            // nama ikon lucide: Plane / Car / Train
+  priceFrom   Decimal? @db.Decimal(12, 2)
+  ctaLabel    String?            // "Book via WhatsApp"
+  ctaUrl      String?            // URL penuh (mis. https://wa.me/…)
+  sortOrder   Int      @default(0)
+}
+```
+
+**Detail teknis:**
+- `TransportOption.ctaUrl` wajib URL http(s) penuh (wa.me di-paste utuh oleh admin).
+- Awards: section landing (LP-012) hanya dirender jika ada data.
+- Keduanya memakai pola CRUD generic yang sama (CMS-B-005): validators `award.ts`/`transport.ts`, API `/api/admin/awards|transports`, admin UI via GenericCrud.
+
+**DoD:**
+- [ ] Ikon transport tersedia di `icon-map.ts` (Plane, Car, Train, Bus, Bike, Ship).
+
+---
+
 ## DATA-005 — Zod Validators (Source of Truth)
 
 **P0 · M · Lib**
@@ -294,6 +330,8 @@ lib/validators/
 ├── gallery.ts
 ├── testimonial.ts
 ├── attraction.ts
+├── award.ts
+├── transport.ts
 ├── faq.ts
 ├── experience.ts
 ├── amenity.ts
