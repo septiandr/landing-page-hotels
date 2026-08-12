@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { Mail, MapPin, MessageCircle, Phone } from "lucide-react";
+import { EVENTS } from "@/lib/analytics";
+import { TrackedLink } from "@/components/analytics/TrackedLink";
 import { NAV_LINKS } from "./nav-links";
 
 // Ikon brand di-render inline (lucide tidak lagi menyediakan brand icons).
@@ -97,34 +99,37 @@ export function Footer({
             <ul className="mt-4 space-y-3 text-sm">
               {phone && (
                 <li>
-                  <a
+                  <TrackedLink
+                    event={EVENTS.clickPhone}
                     href={`tel:${phone.replace(/\s/g, "")}`}
                     className="inline-flex items-center gap-2 transition hover:text-accent-400"
                   >
                     <Phone size={15} aria-hidden className="text-accent-400" /> {phone}
-                  </a>
+                  </TrackedLink>
                 </li>
               )}
               {email && (
                 <li>
-                  <a
+                  <TrackedLink
+                    event={EVENTS.clickEmail}
                     href={`mailto:${email}`}
                     className="inline-flex items-center gap-2 transition hover:text-accent-400"
                   >
                     <Mail size={15} aria-hidden className="text-accent-400" /> {email}
-                  </a>
+                  </TrackedLink>
                 </li>
               )}
               {waNumber && (
                 <li>
-                  <a
+                  <TrackedLink
+                    event={EVENTS.clickWhatsapp}
                     href={`https://wa.me/${waNumber}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 transition hover:text-accent-400"
                   >
                     <MessageCircle size={15} aria-hidden className="text-accent-400" /> WhatsApp
-                  </a>
+                  </TrackedLink>
                 </li>
               )}
             </ul>

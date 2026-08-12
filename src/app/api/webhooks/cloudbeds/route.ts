@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { trackBookingCompleted } from "@/lib/tracking";
+import { trackBookingCompleted } from "@/lib/analytics";
 
 /**
  * Webhook `reservation/created` dari Cloudbeds (BK-009).

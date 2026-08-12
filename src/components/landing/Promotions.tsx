@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { TicketPercent } from "lucide-react";
 import type { Promotion } from "@/generated/prisma/client";
+import { EVENTS, track } from "@/lib/analytics";
 import { PromotionCountdown } from "./PromotionCountdown";
 import { CopyCodeButton } from "./CopyCodeButton";
 
@@ -17,7 +18,17 @@ import { CopyCodeButton } from "./CopyCodeButton";
  */
 export function Promotions({ promotions }: { promotions: Promotion[] }) {
   const [expiredIds, setExpiredIds] = useState<string[]>([]);
+  const viewTracked = useRef(false);
   const visible = promotions.filter((p) => !expiredIds.includes(p.id));
+
+  // ANA-003: `view_promotion` saat ada promo tampil (sekali via ref).
+  useEffect(() => {
+    if (viewTracked.current || visible.length === 0) return;
+    viewTracked.current = true;
+    track(EVENTS.viewPromotion, {
+      promotions: visible.map((p) => p.promoCode || p.title),
+    });
+  }, [visible]);
 
   if (visible.length === 0) return null;
 
@@ -99,6 +110,11 @@ export function Promotions({ promotions }: { promotions: Promotion[] }) {
                 <div className="mt-auto pt-5">
                   <Link
                     href={`/?code=${encodeURIComponent(promo.promoCode ?? "")}#booking`}
+                    onClick={() =>
+                      track(EVENTS.clickPromotion, {
+                        promo: promo.promoCode || promo.title,
+                      })
+                    }
                     className="inline-flex h-10 items-center justify-center rounded-lg bg-primary-700 px-5 text-sm font-semibold text-white transition hover:bg-primary-800"
                   >
                     {promo.ctaLabel || "Book Now"}

@@ -22,6 +22,7 @@ import { BookingWidget } from "@/components/booking/BookingWidget";
 import { isPreviewMode } from "@/lib/preview";
 import { getFromPriceFromEngine } from "@/lib/booking-engine/from-price";
 import { getActivePromotions } from "@/lib/promotions";
+import { faqJsonLd, hotelJsonLd, jsonLdScript } from "@/lib/seo/json-ld";
 import type { HighlightStat } from "@/components/landing/HotelIntro";
 
 // LP-001: preview mode (CMS-U-012) membutuhkan rendering dinamis — halaman
@@ -159,16 +160,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     stats.push({ icon: "amenities", value: String(amenities.length), label: "Facilities" });
   }
 
-  const faqJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: faqItems.map((f) => ({
-      "@type": "Question",
-      name: f.question,
-      acceptedAnswer: { "@type": "Answer", text: f.answer },
-    })),
-  };
-
   const priceForBar =
     enginePrice ??
     (cheapestRoom?.priceFrom != null
@@ -236,18 +227,23 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         <Faq items={faqItems} />
 
         <FinalCta backgroundImage={galleryItems[galleryItems.length - 1]?.image ?? null} />
-
-        {faqItems.length > 0 && (
-          <script
-            type="application/ld+json"
-            // JSON.stringify tidak meng-escape `<` — escape manual supaya konten
-            // CMS tidak bisa keluar dari tag script (XSS via FAQ answer).
-            dangerouslySetInnerHTML={{
-              __html: JSON.stringify(faqJsonLd).replace(/</g, "\\u003c"),
-            }}
-          />
-        )}
       </main>
+
+      {/* SEO-004: Hotel + LocalBusiness JSON-LD (rating nyata dari tabel Review). */}
+      {hotel && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: jsonLdScript(hotelJsonLd(hotel, reviews)) }}
+        />
+      )}
+
+      {/* SEO-004: FAQPage JSON-LD — escape `<` anti XSS (konten CMS). */}
+      {faqItems.length > 0 && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: jsonLdScript(faqJsonLd(faqItems)) }}
+        />
+      )}
 
       <Footer
         hotelName={hotelName}

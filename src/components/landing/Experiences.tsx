@@ -1,6 +1,8 @@
 import Image from "next/image";
 import { Clock3, MessageCircle, Tag } from "lucide-react";
 import type { Experience } from "@/generated/prisma/client";
+import { EVENTS } from "@/lib/analytics";
+import { TrackedLink } from "@/components/analytics/TrackedLink";
 import { formatCurrency } from "@/lib/format";
 
 /**
@@ -83,7 +85,9 @@ export function Experiences({
                     )}
                   </div>
                   {href && (
-                    <a
+                    <TrackedLink
+                      event={EVENTS.clickWhatsapp}
+                      params={{ content: exp.title }}
                       href={href}
                       target={href.startsWith("http") ? "_blank" : undefined}
                       rel={href.startsWith("http") ? "noopener noreferrer" : undefined}
@@ -91,7 +95,7 @@ export function Experiences({
                     >
                       <MessageCircle className="h-4 w-4" aria-hidden />
                       {exp.ctaLabel || "Book via WhatsApp"}
-                    </a>
+                    </TrackedLink>
                   )}
                 </div>
               </article>

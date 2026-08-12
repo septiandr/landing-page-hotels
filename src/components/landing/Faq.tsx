@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import type { FaqItem } from "@/generated/prisma/client";
+import { EVENTS, track } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -20,6 +21,7 @@ const CATEGORY_LABELS: Record<string, string> = {
  */
 export function Faq({ items }: { items: FaqItem[] }) {
   const [openId, setOpenId] = useState<string | null>(null);
+  const viewTracked = useRef(false);
   if (items.length === 0) return null;
 
   const categories = Array.from(new Set(items.map((f) => f.category)));
@@ -53,7 +55,14 @@ export function Faq({ items }: { items: FaqItem[] }) {
                             type="button"
                             aria-expanded={open}
                             aria-controls={panelId}
-                            onClick={() => setOpenId(open ? null : item.id)}
+                            onClick={() => {
+                              // ANA-003: `view_faq` saat accordion pertama dibuka.
+                              if (!viewTracked.current) {
+                                viewTracked.current = true;
+                                track(EVENTS.viewFaq, {});
+                              }
+                              setOpenId(open ? null : item.id);
+                            }}
                             className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left text-sm font-medium text-ink transition hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 sm:text-base"
                           >
                             {item.question}

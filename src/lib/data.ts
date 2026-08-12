@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { unstable_cache } from "next/cache";
 import { db } from "@/lib/db";
 
 /**
@@ -6,7 +7,17 @@ import { db } from "@/lib/db";
  * render pass (mis. antara `generateMetadata` dan page component).
  */
 
-export const getHotel = cache(async () => db.hotel.findFirst());
+// include seo supaya metadata (SEO-001) dan JSON-LD bisa dibaca sekali query.
+// unstable_cache (tag "hotel", TTL 60s) supaya generateMetadata root layout
+// tidak query DB berlebih — termasuk saat render halaman /admin/*. Semua
+// mutation hotel via CMS sudah revalidateTag("hotel") (lihat revalidate.ts).
+export const getHotel = cache(() =>
+  unstable_cache(
+    async () => db.hotel.findFirst({ include: { seo: true } }),
+    ["hotel-data"],
+    { tags: ["hotel"], revalidate: 60 },
+  )(),
+);
 
 export const getRoomBySlug = cache(
   async (slug: string, opts: { includeDrafts?: boolean } = {}) =>

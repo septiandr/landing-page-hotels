@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import type { GalleryItem } from "@/generated/prisma/client";
+import { EVENTS, track } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
 interface GalleryProps {
@@ -13,6 +14,14 @@ interface GalleryProps {
 export function Gallery({ items }: GalleryProps) {
   const [category, setCategory] = useState("ALL");
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const viewTracked = useRef(false);
+
+  // ANA-003: `view_gallery` saat ada foto tampil (sekali).
+  useEffect(() => {
+    if (viewTracked.current || items.length === 0) return;
+    viewTracked.current = true;
+    track(EVENTS.viewGallery, { count: items.length });
+  }, [items]);
 
   const categories = useMemo(() => {
     const seen = new Set<string>();

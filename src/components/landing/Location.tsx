@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ExternalLink, MapPin, Navigation } from "lucide-react";
+import { EVENTS, track } from "@/lib/analytics";
 
 const FALLBACK_TIMEOUT_MS = 5000;
 
@@ -79,6 +80,7 @@ export function Location({
                       href={directionsUrl}
                       target="_blank"
                       rel="noopener noreferrer"
+                      onClick={() => track(EVENTS.clickMap, { context: "fallback" })}
                       className="inline-flex h-10 items-center gap-2 rounded-lg bg-primary-700 px-5 text-sm font-medium text-white transition hover:bg-primary-800"
                     >
                       <Navigation className="h-4 w-4" aria-hidden /> Open in Google Maps

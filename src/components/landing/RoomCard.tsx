@@ -2,6 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { BedDouble, Check, Maximize2, Ruler, Users } from "lucide-react";
 import type { Room, RoomAmenity, RoomPhoto } from "@/generated/prisma/client";
+import { EVENTS } from "@/lib/analytics";
+import { TrackedLink } from "@/components/analytics/TrackedLink";
 import { formatCurrency } from "@/lib/format";
 import { buildAvailabilityUrl } from "@/lib/booking/url";
 
@@ -48,12 +50,15 @@ export function RoomCard({ room }: { room: RoomWithRelations }) {
       {/* Konten */}
       <div className="flex flex-1 flex-col p-5">
         <h3 className="font-display text-xl font-semibold leading-snug text-ink">
-          <Link
+          <TrackedLink
+            internal
+            event={EVENTS.viewRoom}
+            params={{ room: room.slug }}
             href={`/rooms/${room.slug}`}
             className="transition-colors hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 rounded"
           >
             {room.name}
-          </Link>
+          </TrackedLink>
         </h3>
 
         <ul className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-muted">
@@ -111,12 +116,15 @@ export function RoomCard({ room }: { room: RoomWithRelations }) {
             </p>
           )}
           <div className="mt-4 grid grid-cols-2 gap-2">
-            <Link
+            <TrackedLink
+              internal
+              event={EVENTS.viewRoom}
+              params={{ room: room.slug }}
               href={`/rooms/${room.slug}`}
               className="inline-flex h-10 items-center justify-center rounded-lg border border-border text-sm font-medium text-ink transition-colors hover:bg-surface-muted"
             >
               View Room
-            </Link>
+            </TrackedLink>
             <Link
               href={buildAvailabilityUrl({ room: room.slug })}
               className="inline-flex h-10 items-center justify-center rounded-lg bg-primary-700 text-sm font-medium text-white transition-colors hover:bg-primary-800"

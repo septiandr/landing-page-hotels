@@ -14,8 +14,12 @@ import {
   Users,
 } from "lucide-react";
 import { getHotel, getRoomBySlug } from "@/lib/data";
+import { db } from "@/lib/db";
 import { formatCurrency } from "@/lib/format";
 import { buildAvailabilityUrl } from "@/lib/booking/url";
+import { EVENTS } from "@/lib/analytics";
+import { TrackedLink } from "@/components/analytics/TrackedLink";
+import { roomJsonLd, jsonLdScript } from "@/lib/seo/json-ld";
 import { Header } from "@/components/landing/Header";
 import { PreviewBanner } from "@/components/landing/preview-banner";
 import { isPreviewMode } from "@/lib/preview";
@@ -38,8 +42,10 @@ export async function generateMetadata({ params, searchParams }: RoomPageProps):
   if (!room) return { title: "Kamar tidak ditemukan" };
 
   const ogImage = room.photos[0]?.url;
+  // Nama hotel ditambahkan oleh template di root layout (%s | Nama Hotel) —
+  // cukup set nama kamar saja agar tidak duplikat.
   return {
-    title: `${room.name} | ${hotel?.name ?? "Hotel"}`,
+    title: room.name,
     description: room.description?.slice(0, 160),
     alternates: { canonical: `${siteUrl}/rooms/${room.slug}` },
     openGraph: {
@@ -54,9 +60,10 @@ export default async function RoomPage({ params, searchParams }: RoomPageProps) 
   const { slug } = await params;
   const preview = await isPreviewMode(await searchParams);
 
-  const [room, hotel] = await Promise.all([
+  const [room, hotel, reviews] = await Promise.all([
     getRoomBySlug(slug, { includeDrafts: preview }),
     getHotel(),
+    db.review.findMany().catch(() => []),
   ]);
 
   if (!room) notFound();
@@ -202,14 +209,16 @@ export default async function RoomPage({ params, searchParams }: RoomPageProps) 
                 Check Availability
               </Link>
               {whatsappUrl && (
-                <a
+                <TrackedLink
+                  event={EVENTS.clickWhatsapp}
+                  params={{ room: room.name }}
                   href={whatsappUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-lg border border-border text-sm font-medium text-ink transition-colors hover:bg-surface-muted"
                 >
                   <MessageCircle size={17} aria-hidden /> Tanya via WhatsApp
-                </a>
+                </TrackedLink>
               )}
               <p className="mt-4 text-center text-xs leading-relaxed text-muted">
                 Harga terbaik saat booking langsung. Pembayaran diproses aman oleh sistem booking kami.
@@ -218,6 +227,14 @@ export default async function RoomPage({ params, searchParams }: RoomPageProps) 
           </aside>
         </div>
       </main>
+
+      {/* SEO-004: HotelRoom + Offer + AggregateRating (rating hanya jika ada data nyata). */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: jsonLdScript(roomJsonLd(room, hotel?.name ?? "Hotel", reviews)),
+        }}
+      />
     </>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { CalendarDays, Loader2, Minus, Plus, Search, TicketPercent } from "lucide-react";
 import {
   getNightsBetween,
@@ -9,7 +9,7 @@ import {
 } from "@/lib/validators/booking";
 import { transition, validateSearch, type BookingState } from "@/lib/booking-states";
 import { buildBookingUrl } from "@/lib/booking-engine/deep-link";
-import { trackBookingStarted, trackEvent } from "@/lib/tracking";
+import { createEventId, EVENTS, track, trackBookingStarted } from "@/lib/analytics";
 import type { AvailabilityResponse, RateOption } from "@/lib/booking-engine/types";
 import { formatCurrency } from "@/lib/format";
 import { EngineError } from "./EngineError";
@@ -44,6 +44,8 @@ export function BookingWidget({ whatsapp, phone, hotelCurrency = "IDR" }: Bookin
   const [rates, setRates] = useState<RateOption[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  // event_id konsisten per attempt (ANA-004) — di-set saat pencarian dimulai.
+  const attemptIdRef = useRef<string | null>(null);
 
   const today = useMemo(() => toDateInput(new Date()), []);
   const minCheckOut = checkIn ? addDays(checkIn, 1) : "";
@@ -55,6 +57,34 @@ export function BookingWidget({ whatsapp, phone, hotelCurrency = "IDR" }: Bookin
   // parameter jika URL benar-benar membawanya. (setState dijadwalkan ke tick
   // berikutnya — setState sinkron dalam effect dilarang react-hooks.)
   const urlSearch = typeof window === "undefined" ? "" : window.location.search;
+  // ANA-003: `booking_widget_view` saat widget masuk viewport (sekali).
+  useEffect(() => {
+    const el = document.getElementById("booking");
+    if (!el) return;
+    const obs = new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting)) {
+        track(EVENTS.bookingWidgetView, {});
+        obs.disconnect();
+      }
+    }, { threshold: 0.3 });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  // ANA-003: `booking_widget_open` saat user mulai berinteraksi dengan form (sekali).
+  useEffect(() => {
+    const form = document.getElementById("bk-widget-form");
+    if (!form) return;
+    let fired = false;
+    const onFocusIn = () => {
+      if (fired) return;
+      fired = true;
+      track(EVENTS.bookingWidgetOpen, {});
+    };
+    form.addEventListener("focusin", onFocusIn);
+    return () => form.removeEventListener("focusin", onFocusIn);
+  }, []);
+
   useEffect(() => {
     const sp = new URLSearchParams(urlSearch);
     const hasParams =
@@ -105,9 +135,11 @@ export function BookingWidget({ whatsapp, phone, hotelCurrency = "IDR" }: Bookin
   }
 
   async function search(values: WidgetSearchValues) {
+    attemptIdRef.current = createEventId();
     setState((s) => transition(s, { type: "SEARCH_START" }));
-    // ANA-003: track sebelum request agar event conversion funnel tercatat.
-    trackEvent("search_availability", {
+    // ANA-003/004: track sebelum request — event_id konsisten untuk funnel.
+    track(EVENTS.searchAvailability, {
+      event_id: attemptIdRef.current,
       checkin: values.checkIn,
       checkout: values.checkOut,
       adults: values.adults,
@@ -193,6 +225,7 @@ export function BookingWidget({ whatsapp, phone, hotelCurrency = "IDR" }: Bookin
       promoCode: code,
     });
     trackBookingStarted({
+      eventId: attemptIdRef.current ?? createEventId(),
       checkIn,
       checkOut,
       adults,
@@ -214,8 +247,9 @@ export function BookingWidget({ whatsapp, phone, hotelCurrency = "IDR" }: Bookin
 
   function handleSelect(roomId: string) {
     if (selectedId === roomId) return; // hindari event duplikat di analytics
-    // ANA-003: pilihan kamar — langkah funnel sebelum booking_started.
-    trackEvent("select_room", {
+    // ANA-003/004: pilihan kamar — event_id dari attempt berjalan.
+    track(EVENTS.selectRoom, {
+      event_id: attemptIdRef.current ?? undefined,
       room_id: roomId,
       room_name: rates.find((r) => r.roomId === roomId)?.roomName,
     });
@@ -234,7 +268,7 @@ export function BookingWidget({ whatsapp, phone, hotelCurrency = "IDR" }: Bookin
             Harga terbaik saat booking langsung — bebas komisi OTA.
           </p>
 
-          <form onSubmit={onSubmit} noValidate className="mt-6 space-y-5">
+          <form id="bk-widget-form" onSubmit={onSubmit} noValidate className="mt-6 space-y-5">
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label htmlFor="bk-checkin" className="mb-1.5 block text-sm font-medium text-ink">

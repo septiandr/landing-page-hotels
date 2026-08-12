@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertTriangle, MessageCircle, Phone } from "lucide-react";
+import { EVENTS, track } from "@/lib/analytics";
 
 /**
  * Fallback saat engine tidak tersedia (BK-007, PRD §32):
@@ -53,6 +54,7 @@ export function EngineError({ whatsapp, phone, context }: EngineErrorProps) {
               href={waHref}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => track(EVENTS.clickWhatsapp, { context: "engine_fallback" })}
               className="inline-flex h-11 items-center gap-2 rounded-lg bg-emerald-600 px-5 text-sm font-semibold text-white transition hover:bg-emerald-700"
             >
               <MessageCircle size={17} aria-hidden /> WhatsApp
@@ -61,6 +63,7 @@ export function EngineError({ whatsapp, phone, context }: EngineErrorProps) {
           {telHref && (
             <a
               href={telHref}
+              onClick={() => track(EVENTS.clickPhone, { context: "engine_fallback" })}
               className="inline-flex h-11 items-center gap-2 rounded-lg border border-amber-300 px-5 text-sm font-semibold text-amber-900 transition hover:bg-amber-100"
             >
               <Phone size={17} aria-hidden /> Call Us

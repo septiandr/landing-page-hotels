@@ -1,7 +1,7 @@
 "use client";
 
 import { CalendarCheck2 } from "lucide-react";
-import { trackEvent } from "@/lib/tracking";
+import { EVENTS, track } from "@/lib/analytics";
 
 /**
  * LP-016 — Final CTA (PRD §27).
@@ -10,7 +10,7 @@ import { trackEvent } from "@/lib/tracking";
  */
 export function FinalCta({ backgroundImage }: { backgroundImage?: string | null }) {
   function onBookNow() {
-    trackEvent("click_book_now", { location: "final_cta" });
+    track(EVENTS.clickBookNow, { location: "final_cta" });
     document.querySelector("#booking")?.scrollIntoView({ behavior: "smooth" });
   }
 

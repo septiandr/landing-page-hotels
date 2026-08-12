@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Playfair_Display } from "next/font/google";
 import "./globals.css";
+import { getHotelMetadata } from "@/lib/seo";
+import { AnalyticsScripts } from "@/components/analytics/Scripts";
 
 const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta",
@@ -12,14 +14,10 @@ const playfair = Playfair_Display({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: "Hotel Direct Booking",
-    template: "%s | Hotel Direct Booking",
-  },
-  description:
-    "Platform landing page hotel untuk direct booking — book langsung dan dapatkan Best Available Rate serta benefit eksklusif.",
-};
+// SEO-001: metadata dari CMS (SeoMeta hotel) dengan fallback — satu sumber.
+export async function generateMetadata(): Promise<Metadata> {
+  return getHotelMetadata();
+}
 
 export default function RootLayout({
   children,
@@ -28,6 +26,7 @@ export default function RootLayout({
     <html lang="id" className={`${plusJakarta.variable} ${playfair.variable}`}>
       <body className="min-h-screen bg-surface text-ink font-sans antialiased">
         {children}
+        <AnalyticsScripts />
       </body>
     </html>
   );
