@@ -1,5 +1,5 @@
 import type { Benefit } from "@/generated/prisma/client";
-import { getBenefitIcon } from "./benefit-icons";
+import { getIcon } from "./icon-map";
 
 export function Benefits({ benefits }: { benefits: Benefit[] }) {
   if (benefits.length === 0) return null;
@@ -19,7 +19,7 @@ export function Benefits({ benefits }: { benefits: Benefit[] }) {
 
         <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {benefits.map((benefit) => {
-            const Icon = getBenefitIcon(benefit.icon);
+            const Icon = getIcon(benefit.icon);
             return (
               <article
                 key={benefit.id}

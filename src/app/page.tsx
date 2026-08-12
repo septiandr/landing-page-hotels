@@ -3,6 +3,8 @@ import { Header } from "@/components/landing/Header";
 import { Hero } from "@/components/landing/Hero";
 import { Benefits } from "@/components/landing/Benefits";
 import { RoomList } from "@/components/landing/RoomList";
+import { Gallery } from "@/components/landing/Gallery";
+import { Amenities } from "@/components/landing/Amenities";
 
 // Landing page M2: section berikutnya menyusul (LP-005..LP-019).
 export const dynamic = "force-dynamic";
@@ -27,7 +29,8 @@ async function fetchOrEmpty<T>(promise: Promise<T[]>): Promise<T[]> {
 }
 
 export default async function HomePage() {
-  const [hotel, benefits, heroImage, cheapestRoom, rooms] = await Promise.all([
+  const [hotel, benefits, heroImage, cheapestRoom, rooms, galleryItems, amenities] =
+    await Promise.all([
     fetchOrNull(db.hotel.findFirst()),
     fetchOrEmpty(db.benefit.findMany({ orderBy: { sortOrder: "asc" } })),
     fetchOrNull(
@@ -55,6 +58,13 @@ export default async function HomePage() {
         },
       }),
     ),
+    fetchOrEmpty(
+      db.galleryItem.findMany({
+        where: { status: "PUBLISHED" },
+        orderBy: { sortOrder: "asc" },
+      }),
+    ),
+    fetchOrEmpty(db.amenity.findMany({ orderBy: { sortOrder: "asc" } })),
   ]);
 
   const hotelName = hotel?.name ?? "Hotel Direct Booking";
@@ -83,6 +93,10 @@ export default async function HomePage() {
         <Benefits benefits={benefits} />
 
         <RoomList rooms={rooms} />
+
+        <Gallery items={galleryItems} />
+
+        <Amenities amenities={amenities} />
       </main>
     </>
   );
