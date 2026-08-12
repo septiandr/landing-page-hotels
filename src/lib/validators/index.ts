@@ -3,6 +3,7 @@
  * Dipakai di: API handler (schema.parse), form client (type inference),
  * dan test.
  */
+export * from "./booking";
 export * from "./common";
 export * from "./amenity";
 export * from "./attraction";

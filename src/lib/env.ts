@@ -23,6 +23,8 @@ const clientEnvSchema = z.object({
   NEXT_PUBLIC_GA4_ID: z.string().default(""),
   NEXT_PUBLIC_META_PIXEL_ID: z.string().default(""),
   NEXT_PUBLIC_TIKTOK_PIXEL_ID: z.string().default(""),
+  /** Kode 6 karakter property di booking engine Cloudbeds (deep link BK-008). */
+  NEXT_PUBLIC_CLOUDBEDS_PROPERTY_CODE: z.string().default(""),
 });
 
 const envInput = {
@@ -32,6 +34,9 @@ const envInput = {
   NEXT_PUBLIC_GA4_ID: emptyToUndefined(process.env.NEXT_PUBLIC_GA4_ID),
   NEXT_PUBLIC_META_PIXEL_ID: emptyToUndefined(process.env.NEXT_PUBLIC_META_PIXEL_ID),
   NEXT_PUBLIC_TIKTOK_PIXEL_ID: emptyToUndefined(process.env.NEXT_PUBLIC_TIKTOK_PIXEL_ID),
+  NEXT_PUBLIC_CLOUDBEDS_PROPERTY_CODE: emptyToUndefined(
+    process.env.NEXT_PUBLIC_CLOUDBEDS_PROPERTY_CODE,
+  ),
 } as const;
 
 export const env = clientEnvSchema.parse(envInput);

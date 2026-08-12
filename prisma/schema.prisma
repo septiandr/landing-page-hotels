@@ -259,6 +259,19 @@ model User {
   auditLogs    AuditLog[]
 }
 
+/// Idempotensi webhook booking engine (BK-009) — satu reservationID = satu proses.
+model BookingEvent {
+  id            String   @id @default(cuid())
+  reservationId String   @unique
+  propertyId    String
+  event         String
+  payload       Json?
+  processedAt   DateTime @default(now())
+  createdAt     DateTime @default(now())
+
+  @@index([event, processedAt])
+}
+
 model AuditLog {
   id           String   @id @default(cuid())
   userId       String? // null = aksi sistem (cron) atau LOGIN_FAILED user tak dikenal

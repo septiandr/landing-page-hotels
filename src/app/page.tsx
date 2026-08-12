@@ -6,7 +6,10 @@ import { RoomList } from "@/components/landing/RoomList";
 import { Gallery } from "@/components/landing/Gallery";
 import { Amenities } from "@/components/landing/Amenities";
 import { PreviewBanner } from "@/components/landing/preview-banner";
+import { MobileBookingBar } from "@/components/landing/MobileBookingBar";
+import { BookingWidget } from "@/components/booking/BookingWidget";
 import { isPreviewMode } from "@/lib/preview";
+import { getFromPriceFromEngine } from "@/lib/booking-engine/from-price";
 
 // Landing page M2: section berikutnya menyusul (LP-005..LP-019).
 export const dynamic = "force-dynamic";
@@ -75,6 +78,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     fetchOrEmpty(db.amenity.findMany({ orderBy: { sortOrder: "asc" } })),
   ]);
 
+  // BK-010: harga "From" dari engine (cache 10 menit) dengan fallback CMS.
+  const enginePrice = await fetchOrNull(getFromPriceFromEngine());
+
   const hotelName = hotel?.name ?? "Hotel Direct Booking";
   const tagline =
     hotel?.tagline ?? "A peaceful escape surrounded by comfort, culture and unforgettable experiences.";
@@ -90,16 +96,23 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           tagline={tagline}
           heroImage={heroImage?.image ?? hotel?.logo ?? null}
           cheapestPrice={
-            cheapestRoom?.priceFrom != null
+            enginePrice ??
+            (cheapestRoom?.priceFrom != null
               ? { price: Number(cheapestRoom.priceFrom), currency }
-              : null
+              : null)
           }
         />
 
-        {/* Anchor booking widget — diisi task BK-001 (M2 berikutnya). */}
-        <div id="booking" className="scroll-mt-24" />
-
         <Benefits benefits={benefits} />
+
+        {/* Booking widget (BK-001) — komponen conversion utama. */}
+        <div className="py-16">
+          <BookingWidget
+            whatsapp={hotel?.whatsapp}
+            phone={hotel?.phone}
+            hotelCurrency={currency}
+          />
+        </div>
 
         <RoomList rooms={rooms} />
 
@@ -107,6 +120,15 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
         <Amenities amenities={amenities} />
       </main>
+
+      <MobileBookingBar
+        price={
+          enginePrice ??
+          (cheapestRoom?.priceFrom != null
+            ? { price: Number(cheapestRoom.priceFrom), currency }
+            : null)
+        }
+      />
     </>
   );
 }
