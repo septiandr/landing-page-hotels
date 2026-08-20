@@ -19,6 +19,7 @@ import { Footer } from "@/components/landing/Footer";
 import { PreviewBanner } from "@/components/landing/preview-banner";
 import { MobileBookingBar } from "@/components/landing/MobileBookingBar";
 import { BookingWidget } from "@/components/booking/BookingWidget";
+import { isPaymentEnabled } from "@/lib/payment";
 import { isPreviewMode } from "@/lib/preview";
 import { getFromPriceFromEngine } from "@/lib/booking-engine/from-price";
 import { getActivePromotions } from "@/lib/promotions";
@@ -188,6 +189,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             whatsapp={whatsapp}
             phone={hotel?.phone}
             hotelCurrency={currency}
+            paymentEnabled={isPaymentEnabled()}
           />
         </div>
 

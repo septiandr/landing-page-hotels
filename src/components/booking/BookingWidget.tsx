@@ -9,7 +9,7 @@ import {
 } from "@/lib/validators/booking";
 import { transition, validateSearch, type BookingState } from "@/lib/booking-states";
 import { buildBookingUrl } from "@/lib/booking-engine/deep-link";
-import { createEventId, EVENTS, track, trackBookingStarted } from "@/lib/analytics";
+import { createEventId, EVENTS, track, trackBookingStarted, trackPaymentStarted } from "@/lib/analytics";
 import type { AvailabilityResponse, RateOption } from "@/lib/booking-engine/types";
 import { formatCurrency } from "@/lib/format";
 import { EngineError } from "./EngineError";
@@ -19,6 +19,8 @@ export interface BookingWidgetProps {
   whatsapp?: string | null;
   phone?: string | null;
   hotelCurrency?: string;
+  /** Payment gateway aktif? Di-set server (process.env.PAYMENT_PROVIDER). */
+  paymentEnabled?: boolean;
 }
 
 function toDateInput(d: Date): string {
@@ -33,7 +35,12 @@ function addDays(iso: string, days: number): string {
   return toDateInput(d);
 }
 
-export function BookingWidget({ whatsapp, phone, hotelCurrency = "IDR" }: BookingWidgetProps) {
+export function BookingWidget({
+  whatsapp,
+  phone,
+  hotelCurrency = "IDR",
+  paymentEnabled = false,
+}: BookingWidgetProps) {
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [adults, setAdults] = useState(2);
@@ -212,9 +219,9 @@ export function BookingWidget({ whatsapp, phone, hotelCurrency = "IDR" }: Bookin
     );
   }
 
-  function onBook(rate: RateOption) {
+  async function onBook(rate: RateOption) {
     const code = promoCode.trim() || undefined;
-    const url = buildBookingUrl({
+    const booking = {
       checkIn,
       checkOut,
       adults,
@@ -223,9 +230,54 @@ export function BookingWidget({ whatsapp, phone, hotelCurrency = "IDR" }: Bookin
       roomId: rate.roomId,
       roomType: rate.roomType,
       promoCode: code,
-    });
+    };
+    const eventId = attemptIdRef.current ?? createEventId();
+
+    // PGW-002: jika payment gateway dikonfigurasi, arahkan ke checkout dulu.
+    if (paymentEnabled) {
+      try {
+        const res = await fetch("/api/checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            orderId: eventId,
+            amount: rate.totalPrice,
+            currency: rate.currency,
+            itemName: `${rate.roomName} — ${checkIn} s/d ${checkOut}`,
+            metadata: {
+              checkin: checkIn,
+              checkout: checkOut,
+              adults: String(adults),
+              kids: String(kids),
+              rooms: String(rooms),
+              promo_code: code ?? "",
+            },
+          }),
+        });
+        const body = (await res.json().catch(() => null)) as
+          | { data?: { redirectUrl?: string; transactionId?: string; provider?: string } }
+          | null;
+        if (res.ok && body?.data?.redirectUrl) {
+          trackPaymentStarted({
+            eventId,
+            transactionId: body.data.transactionId ?? eventId,
+            provider: body.data.provider ?? "unknown",
+            amount: rate.totalPrice,
+            currency: rate.currency,
+          });
+          window.location.assign(body.data.redirectUrl);
+          return;
+        }
+        // Gagal create checkout (belum terkonfigurasi / error gateway) →
+        // degradasi graceful ke flow lama (Cloudbeds → WhatsApp).
+        console.error("[booking] /api/checkout gagal:", res.status, body?.data ?? body);
+      } catch (err) {
+        console.error("[booking] /api/checkout error:", err);
+      }
+    }
+
     trackBookingStarted({
-      eventId: attemptIdRef.current ?? createEventId(),
+      eventId,
       checkIn,
       checkOut,
       adults,
@@ -235,6 +287,7 @@ export function BookingWidget({ whatsapp, phone, hotelCurrency = "IDR" }: Bookin
       promoCode: code,
     });
 
+    const url = buildBookingUrl(booking);
     if (url) {
       window.open(url, "_blank", "noopener");
       return;
@@ -372,7 +425,7 @@ export function BookingWidget({ whatsapp, phone, hotelCurrency = "IDR" }: Bookin
                     </div>
                     <button
                       type="button"
-                      onClick={() => onBook(selectedRate)}
+                      onClick={() => void onBook(selectedRate)}
                       className="inline-flex h-11 items-center justify-center rounded-lg bg-primary-700 px-6 text-sm font-semibold text-white transition hover:bg-primary-800"
                     >
                       Book Now — {formatCurrency(selectedRate.totalPrice, selectedRate.currency)}

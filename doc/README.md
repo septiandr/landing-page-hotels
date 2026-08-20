@@ -34,7 +34,10 @@ doc/
 ├── 07-seo-analytics.md              # SEO, structured data, event tracking
 ├── 08-performance-security.md       # Performance, a11y, security
 ├── 09-testing-release.md            # Testing, acceptance criteria, release
-└── 10-onsite-booking.md             # Booking walk-in front desk (sync Cloudbeds)
+├── 10-onsite-booking.md             # Booking walk-in front desk (sync Cloudbeds)
+├── 11-test-script-per-role.md       # Test script per role (RBAC) + breakdown test
+├── 12-payment-gateway.md            # Template integrasi payment gateway (PGW-001..003)
+└── unit-tests/                      # Dokumen unit/component test per fitur (README + 01..12)
 ```
 
 ## Target Struktur Codebase (dibuat pada FOUND-002)

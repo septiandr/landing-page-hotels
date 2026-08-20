@@ -16,6 +16,7 @@ export const EVENTS = {
   selectRoom: "select_room",
   clickBookNow: "click_book_now",
   bookingStarted: "booking_started",
+  paymentStarted: "payment_started",
   bookingCompleted: "booking_completed",
   viewPromotion: "view_promotion",
   clickPromotion: "click_promotion",
@@ -78,6 +79,25 @@ export function trackBookingStarted(params: BookingStartedParams): void {
     rooms: params.rooms,
     room_name: params.roomName,
     promo_code: params.promoCode,
+  });
+}
+
+export interface PaymentStartedParams {
+  eventId: string;
+  transactionId: string;
+  provider: string;
+  amount: number;
+  currency: string;
+}
+
+/** `payment_started` — saat redirect ke payment gateway (PGW-002). */
+export function trackPaymentStarted(params: PaymentStartedParams): void {
+  track(EVENTS.paymentStarted, {
+    event_id: params.eventId,
+    transaction_id: params.transactionId,
+    payment_provider: params.provider,
+    amount: params.amount,
+    currency: params.currency,
   });
 }
 

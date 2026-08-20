@@ -20,6 +20,7 @@ Landing page hotel **all-in-one**: website publik (SSR/ISR), **CMS admin** untuk
 - **Adapter pattern**: `CloudbedsAdapter` (production) & `MockAdapter` (dev/E2E) — UI tidak pernah tahu provider aktif
 - **Deep link** ke Hosted Booking Engine Cloudbeds (`checkin`, `checkout`, `adults`, `kids`, `promo`, `room_type`) — payment & konfirmasi ditangani Cloudbeds
 - **Webhook** `reservation/created` → track `booking_completed` (idempotent, response < 2 detik)
+- **Payment gateway** (PGW-001..003): adapter pattern + template integrasi (Midtrans/Xendit/DOKU) — aktif via `PAYMENT_PROVIDER` env; tanpa konfigurasi "Book Now" otomatis fallback ke Cloudbeds/WhatsApp. Lihat [`doc/12-payment-gateway.md`](doc/12-payment-gateway.md)
 - URL shareable: `?checkin=&checkout=&adults=&kids=&rooms=&code=`
 - Fallback error → WhatsApp / Call dengan pesan konteks
 
@@ -136,6 +137,9 @@ NEXT_PUBLIC_SITE_URL="http://localhost:3000"
 
 # Booking engine: mock (dev) | cloudbeds (production)
 BOOKING_ENGINE_PROVIDER="mock"
+
+# Payment gateway: none (default) | mock | template (lihat doc/12-payment-gateway.md)
+PAYMENT_PROVIDER="none"
 ```
 
 Env opsional (isi saat sudah punya akun): `CLOUDBEDS_API_KEY`, `CLOUDBEDS_PROPERTY_ID`, `NEXT_PUBLIC_CLOUDBEDS_PROPERTY_CODE`, `NEXT_PUBLIC_GTM_ID`, `NEXT_PUBLIC_GA4_ID`, `NEXT_PUBLIC_META_PIXEL_ID`, `NEXT_PUBLIC_TIKTOK_PIXEL_ID`, `NEXT_PUBLIC_WHATSAPP_NUMBER` — lihat `.env.example`.
