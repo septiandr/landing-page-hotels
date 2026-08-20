@@ -97,11 +97,12 @@ export default async function AuditLogPage({ searchParams }: { searchParams: Par
             Entity
             <select
               name="entity"
+              defaultValue={entity ?? ""}
               className="rounded-lg border border-border bg-white px-3 py-1.5 text-sm outline-none focus:border-primary-500"
             >
               <option value="">Semua</option>
               {entities.map((e) => (
-                <option key={e.entity} value={e.entity} selected={entity === e.entity}>
+                <option key={e.entity} value={e.entity}>
                   {ENTITY_LABELS[e.entity] ?? e.entity}
                 </option>
               ))}
@@ -111,11 +112,12 @@ export default async function AuditLogPage({ searchParams }: { searchParams: Par
             Aksi
             <select
               name="action"
+              defaultValue={action ?? ""}
               className="rounded-lg border border-border bg-white px-3 py-1.5 text-sm outline-none focus:border-primary-500"
             >
               <option value="">Semua</option>
               {ACTIONS.map((a) => (
-                <option key={a} value={a} selected={action === a}>
+                <option key={a} value={a}>
                   {a}
                 </option>
               ))}
