@@ -124,6 +124,14 @@ const STATUS_STYLES: Record<string, string> = {
   SCHEDULED: "bg-amber-100 text-amber-700",
   EXPIRED: "bg-red-100 text-red-700",
   ARCHIVED: "bg-ink/10 text-ink-soft",
+  CONFIRMED: "bg-sky-100 text-sky-700",
+  CHECKED_IN: "bg-emerald-100 text-emerald-700",
+  CHECKED_OUT: "bg-ink/10 text-ink-soft",
+  CANCELLED: "bg-red-100 text-red-700",
+  NO_SHOW: "bg-amber-100 text-amber-700",
+  CHECK_IN: "bg-emerald-100 text-emerald-700",
+  CHECK_OUT: "bg-ink/10 text-ink-soft",
+  CANCEL: "bg-red-100 text-red-700",
 };
 
 export function StatusBadge({ status }: { status: string }) {

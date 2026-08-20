@@ -125,3 +125,138 @@ test.describe.serial("Room lifecycle (create → preview → publish → audit)"
     await expect(createRow.first()).toBeVisible();
   });
 });
+
+test.describe.serial("On-site booking (OSB): create → check-in → check-out", () => {
+  let bookingId: string | null = null;
+  let bookingCode: string | null = null;
+  const guestName = `Tamu E2E ${Date.now()}`;
+
+  test("create walk-in booking via API (mock engine)", async ({ page }) => {
+    await login(page);
+    // Ambil room published pertama (seed selalu punya room published).
+    const roomsRes = await page.request.get("/api/admin/rooms?status=PUBLISHED");
+    expect(roomsRes.status()).toBe(200);
+    const roomsBody = (await roomsRes.json()) as {
+      data?: { items?: { id: string; name: string }[] };
+    };
+    const room = roomsBody.data?.items?.[0];
+    expect(room?.id).toBeTruthy();
+
+    const today = new Date();
+    const checkIn = today.toISOString().slice(0, 10);
+    const checkOut = new Date(today.getTime() + 2 * 86400000).toISOString().slice(0, 10);
+
+    const res = await page.request.post("/api/admin/bookings", {
+      data: {
+        roomTypeId: room!.id,
+        checkIn,
+        checkOut,
+        adults: 2,
+        kids: 0,
+        guestName,
+        guestPhone: "081234567890",
+        pricePerNight: 500000,
+        paymentMethod: "CASH",
+      },
+    });
+    expect([200, 201].includes(res.status())).toBe(true);
+    const body = (await res.json()) as {
+      data?: { id: string; code: string; status: string; cloudbedsReservationId: string | null };
+    };
+    bookingId = body.data?.id ?? null;
+    bookingCode = body.data?.code ?? null;
+    expect(bookingId).toBeTruthy();
+    expect(body.data?.status).toBe("CONFIRMED");
+    // Mock engine selalu mengembalikan reservation id.
+    expect(body.data?.cloudbedsReservationId).toBeTruthy();
+  });
+
+  test("booking tampil di list & detail admin", async ({ page }) => {
+    await login(page);
+    expect(bookingId).toBeTruthy();
+    await page.goto("/admin/bookings");
+    await expect(page.getByText(guestName).first()).toBeVisible();
+
+    await page.goto(`/admin/bookings/${bookingId}`);
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    await expect(page.getByText("CONFIRMED").first()).toBeVisible();
+  });
+
+  test("check-in → status CHECKED_IN", async ({ page }) => {
+    await login(page);
+    expect(bookingId).toBeTruthy();
+    const res = await page.request.patch(`/api/admin/bookings/${bookingId}`, {
+      data: { action: "CHECK_IN" },
+    });
+    expect([200, 201].includes(res.status())).toBe(true);
+    const body = (await res.json()) as { data?: { status: string } };
+    expect(body.data?.status).toBe("CHECKED_IN");
+  });
+
+  test("check-out → status CHECKED_OUT; transisi invalid ditolak", async ({ page }) => {
+    await login(page);
+    expect(bookingId).toBeTruthy();
+    const res = await page.request.patch(`/api/admin/bookings/${bookingId}`, {
+      data: { action: "CHECK_OUT" },
+    });
+    expect([200, 201].includes(res.status())).toBe(true);
+    const body = (await res.json()) as { data?: { status: string } };
+    expect(body.data?.status).toBe("CHECKED_OUT");
+
+    // Terminal: tidak bisa check-in ulang → 409 INVALID_TRANSITION.
+    const invalid = await page.request.patch(`/api/admin/bookings/${bookingId}`, {
+      data: { action: "CHECK_IN" },
+    });
+    expect(invalid.status()).toBe(409);
+  });
+
+  test("cancel wajib alasan → error; dengan alasan → CANCELLED", async ({ page }) => {
+    await login(page);
+    const roomsRes = await page.request.get("/api/admin/rooms?status=PUBLISHED");
+    const roomsBody = (await roomsRes.json()) as { data?: { items?: { id: string }[] } };
+    const roomId = roomsBody.data?.items?.[0]?.id;
+    expect(roomId).toBeTruthy();
+
+    const today = new Date();
+    const checkIn = today.toISOString().slice(0, 10);
+    const checkOut = new Date(today.getTime() + 2 * 86400000).toISOString().slice(0, 10);
+    const created = await page.request.post("/api/admin/bookings", {
+      data: {
+        roomTypeId: roomId,
+        checkIn,
+        checkOut,
+        adults: 2,
+        guestName: `Cancel E2E ${Date.now()}`,
+        guestPhone: "081298765432",
+        pricePerNight: 450000,
+      },
+    });
+    expect([200, 201].includes(created.status())).toBe(true);
+    const createdBody = (await created.json()) as { data?: { id: string } };
+    const cancelBookingId = createdBody.data?.id;
+    expect(cancelBookingId).toBeTruthy();
+
+    const noReason = await page.request.patch(`/api/admin/bookings/${cancelBookingId}`, {
+      data: { action: "CANCEL" },
+    });
+    expect(noReason.status()).toBe(400);
+
+    const withReason = await page.request.patch(`/api/admin/bookings/${cancelBookingId}`, {
+      data: { action: "CANCEL", cancellationReason: "Tamu batal karena jadwal berubah" },
+    });
+    expect([200, 201].includes(withReason.status())).toBe(true);
+    const body = (await withReason.json()) as { data?: { status: string } };
+    expect(body.data?.status).toBe("CANCELLED");
+  });
+
+  test("audit log mencatat aksi booking", async ({ page }) => {
+    await login(page);
+    expect(bookingCode).toBeTruthy();
+    await page.goto("/admin/audit-log");
+    const row = page
+      .locator("tbody tr")
+      .filter({ hasText: "Booking" })
+      .filter({ hasText: "CHECK_OUT" });
+    await expect(row.first()).toBeVisible();
+  });
+});

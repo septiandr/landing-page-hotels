@@ -57,6 +57,35 @@ export interface BookingInitRequest {
   promoCode?: string;
 }
 
+/** Data tamu walk-in (OSB-002). */
+export interface CreateReservationGuest {
+  firstName: string;
+  lastName: string;
+  email?: string | null;
+  phone: string;
+}
+
+/** Request createReservation ke booking engine (OSB-002). */
+export interface CreateReservationRequest {
+  /** YYYY-MM-DD */
+  checkIn: string;
+  /** YYYY-MM-DD */
+  checkOut: string;
+  /** room_id di Cloudbeds (dipetakan dari Room.id via room-map). */
+  roomId: string;
+  adults: number;
+  kids: number;
+  guest: CreateReservationGuest;
+  /** Total harga seluruh malam. */
+  total?: number;
+}
+
+/** Hasil createReservation (OSB-002). */
+export interface CreateReservationResult {
+  reservationId: string;
+  status: string;
+}
+
 export interface BookingEngineAdapter {
   provider: "cloudbeds" | "mock";
   /**
@@ -72,4 +101,9 @@ export interface BookingEngineAdapter {
    * fallback WhatsApp (BK-007).
    */
   buildBookingUrl(req: BookingInitRequest): string | null;
+  /**
+   * Buat reservasi di engine (OSB-002) — dipakai booking walk-in front desk.
+   * Reject → caller map ke error API (OSB-003), jangan simpan lokal.
+   */
+  createReservation(req: CreateReservationRequest): Promise<CreateReservationResult>;
 }

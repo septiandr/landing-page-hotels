@@ -14,10 +14,13 @@ const metaHosts = metaId ? " https://connect.facebook.net" : "";
 const tiktokHosts = tiktokId ? " https://analytics.tiktok.com" : "";
 const cbHosts = cloudbedsActive ? " https://*.cloudbeds.com" : "";
 
+// React dev-mode butuh eval() untuk debugging; production menolak unsafe-eval.
+const evalSrc = process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : "";
+
 const contentSecurityPolicy = [
   "default-src 'self'",
   // 'unsafe-inline' wajib untuk inline bootstrap script Next.js (production).
-  `script-src 'self' 'unsafe-inline'${gtmHosts}${metaHosts}${tiktokHosts}${cbHosts}`,
+  `script-src 'self' 'unsafe-inline'${evalSrc}${gtmHosts}${metaHosts}${tiktokHosts}${cbHosts}`,
   "style-src 'self' 'unsafe-inline'",
   // data:/blob: untuk next/image; googleusercontent untuk avatar/thumb eksternal.
   "img-src 'self' data: blob: https://images.unsplash.com https://*.googleusercontent.com https://maps.google.com https://www.google.com",

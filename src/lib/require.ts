@@ -35,3 +35,29 @@ export async function requirePermission(action: Permission): Promise<AuthedConte
 
   return { session, user, role };
 }
+
+/**
+ * Gate GET read-only: role dengan permission action, ATAU VIEWER (baca saja).
+ * Mutation tetap harus `requirePermission` penuh (OSB-006).
+ */
+export async function requirePermissionWithRead(
+  action: Permission,
+): Promise<AuthedContext> {
+  try {
+    return await requirePermission(action);
+  } catch (err) {
+    // VIEWER diizinkan baca — selain itu re-throw.
+    if (err instanceof ApiError && err.status === 403) {
+      const session = await auth();
+      const user = session?.user;
+      if (user && user.role === "VIEWER") {
+        const dbUser = await db.user.findUnique({
+          where: { id: user.id },
+          select: { isActive: true },
+        });
+        if (dbUser?.isActive) return { session, user, role: "VIEWER" };
+      }
+    }
+    throw err;
+  }
+}

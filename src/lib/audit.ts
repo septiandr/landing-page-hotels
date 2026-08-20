@@ -8,6 +8,9 @@ export type AuditAction =
   | "DELETE"
   | "PUBLISH"
   | "UNPUBLISH"
+  | "CHECK_IN"
+  | "CHECK_OUT"
+  | "CANCEL"
   | "LOGIN"
   | "LOGIN_FAILED";
 

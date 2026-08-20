@@ -33,7 +33,8 @@ doc/
 ├── 06-booking-widget.md             # Booking widget + booking engine integration
 ├── 07-seo-analytics.md              # SEO, structured data, event tracking
 ├── 08-performance-security.md       # Performance, a11y, security
-└── 09-testing-release.md            # Testing, acceptance criteria, release
+├── 09-testing-release.md            # Testing, acceptance criteria, release
+└── 10-onsite-booking.md             # Booking walk-in front desk (sync Cloudbeds)
 ```
 
 ## Target Struktur Codebase (dibuat pada FOUND-002)
@@ -48,6 +49,7 @@ src/
 │   ├── (admin)/                     # CMS admin (protected)
 │   │   ├── login/page.tsx
 │   │   ├── dashboard/page.tsx
+│   │   ├── bookings/                # on-site booking (OSB-008..010)
 │   │   └── ...
 │   ├── api/
 │   │   ├── admin/                   # CRUD CMS (protected + RBAC)
@@ -94,6 +96,7 @@ src/
 | **M2 — Landing Page MVP** | LP-*, BK-*, SEO-*, ANA-* (P0) | Landing page lengkap + booking widget + tracking |
 | **M3 — CMS MVP** | CMS-B-*, CMS-U-*, DATA-005 | Admin bisa kelola konten + publish tanpa developer |
 | **M4 — Polish & Release** | PERF-*, SEC-*, TEST-*, QA-* | Perf budget, security, acceptance criteria terpenuhi |
+| **M5 — On-Site Booking** | OSB-001..011 | Front desk bisa buat/kelola booking walk-in (sync Cloudbeds) |
 
 ## Cara Menggunakan Task
 

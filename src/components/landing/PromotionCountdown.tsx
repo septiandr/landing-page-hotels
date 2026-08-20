@@ -16,18 +16,20 @@ export function PromotionCountdown({
   endsAt: string;
   onExpired?: () => void;
 }) {
-  const [remaining, setRemaining] = useState(() => msUntil(endsAt));
+  const [remaining, setRemaining] = useState<number | null>(null);
 
   useEffect(() => {
-    const id = window.setInterval(() => {
+    const update = () => {
       const ms = msUntil(endsAt);
       setRemaining(ms);
       if (ms <= 0) onExpired?.();
-    }, 1000);
+    };
+    update();
+    const id = window.setInterval(update, 1000);
     return () => window.clearInterval(id);
   }, [endsAt, onExpired]);
 
-  if (remaining <= 0) return null;
+  if (remaining === null || remaining <= 0) return null;
 
   return (
     <div

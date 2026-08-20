@@ -25,6 +25,9 @@ export type {
   AvailabilityRequest,
   AvailabilityResponse,
   BookingInitRequest,
+  CreateReservationGuest,
+  CreateReservationRequest,
+  CreateReservationResult,
   RateOption,
 } from "./types";
 export { buildBookingUrl } from "./deep-link";

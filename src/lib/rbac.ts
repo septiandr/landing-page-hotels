@@ -11,6 +11,7 @@ export const PERMISSIONS = {
   analytics: ["ADMIN", "MARKETING"],
   settings: ["ADMIN"],
   users: ["ADMIN"],
+  onsite_booking: ["ADMIN"],
 } as const satisfies Record<string, readonly Role[]>;
 
 export type Permission = keyof typeof PERMISSIONS;

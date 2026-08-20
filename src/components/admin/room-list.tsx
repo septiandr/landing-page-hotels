@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { ImageIcon, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { CONTENT_STATUSES } from "@/lib/validators";
 import { apiDelete, apiFetch } from "./api";
 import { Button, Card, EmptyState, Input, Select, Skeleton, StatusBadge } from "./ui";
@@ -149,13 +149,19 @@ export function RoomListPage() {
                   <tr key={room.id} className="transition hover:bg-surface">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={room.photos[0]?.url ?? ""}
-                          alt={room.photos[0]?.altText ?? room.name}
-                          className="h-10 w-14 shrink-0 rounded-md object-cover"
-                          loading="lazy"
-                        />
+                        {room.photos[0]?.url ? (
+                          /* eslint-disable-next-line @next/next/no-img-element */
+                          <img
+                            src={room.photos[0].url}
+                            alt={room.photos[0]?.altText ?? room.name}
+                            className="h-10 w-14 shrink-0 rounded-md object-cover"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="flex h-10 w-14 shrink-0 items-center justify-center rounded-md bg-surface text-ink-soft">
+                            <ImageIcon className="h-4 w-4" />
+                          </div>
+                        )}
                         <span className="font-medium text-ink">{room.name}</span>
                       </div>
                     </td>

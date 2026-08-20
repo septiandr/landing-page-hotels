@@ -25,6 +25,8 @@ export const EVENTS = {
   clickWhatsapp: "click_whatsapp",
   clickEmail: "click_email",
   viewFaq: "view_faq",
+  onsiteBookingCreated: "onsite_booking_created",
+  onsiteBookingCancelled: "onsite_booking_cancelled",
 } as const;
 
 export type EventName = (typeof EVENTS)[keyof typeof EVENTS];
@@ -128,4 +130,97 @@ export async function trackBookingCompleted(params: BookingCompletedParams): Pro
     reservationId: params.reservationId,
     propertyId: params.propertyId,
   });
+}
+
+export interface OnsiteBookingCreatedParams {
+  bookingCode: string;
+  roomName: string;
+  checkIn: string;
+  checkOut: string;
+  nights: number;
+  totalPrice: number;
+}
+
+/**
+ * Server-only: `onsite_booking_created` (OSB-011) — booking walk-in front desk.
+ * Event sekunder terpisah dari funnel online (`booking_started`/`booking_completed`);
+ * dikirim ke GA4 MP bila dikonfigurasi, else log.
+ */
+export async function trackOnsiteBookingCreated(
+  params: OnsiteBookingCreatedParams,
+): Promise<void> {
+  const apiSecret = process.env.GA4_MP_API_SECRET;
+  const measurementId = process.env.GA4_MP_MEASUREMENT_ID;
+
+  if (apiSecret && measurementId) {
+    try {
+      await fetch(
+        `https://www.google-analytics.com/mp/collect?measurement_id=${measurementId}&api_secret=${apiSecret}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            client_id: `onsite-${params.bookingCode}`,
+            events: [
+              {
+                name: EVENTS.onsiteBookingCreated,
+                params: {
+                  booking_code: params.bookingCode,
+                  room_name: params.roomName,
+                  checkin: params.checkIn,
+                  checkout: params.checkOut,
+                  nights: params.nights,
+                  total_price: params.totalPrice,
+                },
+              },
+            ],
+          }),
+          signal: AbortSignal.timeout(5_000),
+        },
+      ).catch(() => null);
+    } catch {
+      // fire-and-forget — gagal tracking tidak menggagalkan create.
+    }
+  }
+
+  console.info("[analytics] onsite_booking_created", { bookingCode: params.bookingCode });
+}
+
+export interface OnsiteBookingCancelledParams {
+  bookingCode: string;
+  reason: string | null;
+}
+
+/** Server-only: `onsite_booking_cancelled` (OSB-011). */
+export async function trackOnsiteBookingCancelled(
+  params: OnsiteBookingCancelledParams,
+): Promise<void> {
+  const apiSecret = process.env.GA4_MP_API_SECRET;
+  const measurementId = process.env.GA4_MP_MEASUREMENT_ID;
+
+  if (apiSecret && measurementId) {
+    try {
+      await fetch(
+        `https://www.google-analytics.com/mp/collect?measurement_id=${measurementId}&api_secret=${apiSecret}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            client_id: `onsite-${params.bookingCode}`,
+            events: [
+              {
+                name: EVENTS.onsiteBookingCancelled,
+                params: { booking_code: params.bookingCode, reason: params.reason ?? "" },
+              },
+            ],
+          }),
+          signal: AbortSignal.timeout(5_000),
+        },
+      ).catch(() => null);
+    } catch {
+      // fire-and-forget.
+    }
+  }
+
+  console.info("[analytics] onsite_booking_cancelled", { bookingCode: params.bookingCode });
 }

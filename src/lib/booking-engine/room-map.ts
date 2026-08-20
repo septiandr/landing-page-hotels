@@ -19,3 +19,11 @@ export function roomAbbrByCloudbedsId(roomId: string): string | undefined {
 export function roomSlugByCloudbedsId(roomId: string): string | undefined {
   return ROOM_MAP[roomId]?.slug;
 }
+
+/** slug CMS → cloudbeds room_id (reverse dari ROOM_MAP). */
+export function cloudbedsRoomIdBySlug(slug: string): string | undefined {
+  for (const [roomId, m] of Object.entries(ROOM_MAP)) {
+    if (m.slug === slug) return roomId;
+  }
+  return undefined;
+}

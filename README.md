@@ -28,6 +28,7 @@ Landing page hotel **all-in-one**: website publik (SSR/ISR), **CMS admin** untuk
 - **RBAC**: Admin / Editor / Viewer (permission check per action)
 - **CRUD lengkap**: Hotel & SEO settings, Rooms, Amenities, Gallery, Promotions, Testimonials, Experiences, FAQs, Attractions, Awards, Transports — dengan form Zod + React Hook Form, drag-and-drop sort (dnd-kit), upload gambar (sharp → local disk, interface S3-ready)
 - **Audit log** setiap aksi, **scheduled publish** (cron → draft/expire otomatis), **preview** (`?preview=1`) sebelum publish
+- **On-site booking** (`/admin/bookings`, khusus ADMIN): booking walk-in front desk — daftar & pencarian, create (sync Cloudbeds via `createReservation`), check-in/check-out/cancel/no-show (transisi tervalidasi, audit log + event `onsite_booking_created`/`onsite_booking_cancelled`)
 
 ### 📈 SEO & Analytics
 - Metadata per halaman + per room, `sitemap.xml`, `robots.txt`
@@ -167,6 +168,24 @@ Buka:
 - 🌐 Landing page: **http://localhost:3000**
 - 🔐 CMS admin: **http://localhost:3000/admin** (login dengan akun di atas)
 - 🔎 API: `http://localhost:3000/api/availability?checkin=2026-09-01&checkout=2026-09-03&adults=2&kids=0&rooms=1`
+
+### 6. Verifikasi akses sesuai role (RBAC)
+
+Matriks permission ada di `src/lib/rbac.ts` dan menu admin difilter per role (`sidebar.tsx`). Login di `/admin` sesuai role-nya lalu cek perilaku di bawah:
+
+| Role | Akun | Menu yang muncul | Kemampuan | Tidak bisa |
+|---|---|---|---|---|
+| **Admin** | `admin@example.com` | Semua menu (Dashboard, Bookings, konten, Hotel/SEO Settings, Users, Audit Log) | Full access: CRUD semua entitas, **Publish**, manage **Users**, on-site **Bookings** | — |
+| **Editor** | `editor@example.com` | Dashboard + semua menu konten & Promotions | CRUD konten & promo (simpan draft) | **Publish**, Settings, Users, Audit Log |
+| **Marketing** *(buat manual)* | via **Admin → Users** | = Editor + **Audit Log** | CRUD konten + **Publish** + lihat analytics | Settings, Users, on-site Booking |
+| **Viewer** *(buat manual)* | via **Admin → Users** | Hanya **Dashboard** + **Bookings** (read-only) | Lihat halaman booking & dashboard | Semua aksi tulis → **403** (JSON), tanpa akses menu CMS |
+
+**Langkah uji cepat per role:**
+1. Login **Admin** → pastikan semua menu muncul, coba publish sebuah room (mengubah `status`), buat user `Viewer` di `/admin/users`.
+2. Logout → login **Editor** → menu Settings/Users/Audit Log hilang; coba publish → ditolak 403 (`requirePermission("publish")` di `src/lib/publish.ts`).
+3. Logout → login **Viewer** → hanya Dashboard & Bookings read-only; akses langsung `/admin/rooms` → redirect/403.
+
+> Buat user **Marketing/Viewer** via menu **Admin → Users**, atau tambahkan di `prisma/seed.ts`.
 
 ## 📜 Scripts
 

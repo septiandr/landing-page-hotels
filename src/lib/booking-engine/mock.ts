@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { db } from "@/lib/db";
 import { getNightsBetween } from "@/lib/validators/booking";
 import type {
@@ -5,6 +6,8 @@ import type {
   AvailabilityResponse,
   BookingEngineAdapter,
   BookingInitRequest,
+  CreateReservationRequest,
+  CreateReservationResult,
   RateOption,
 } from "./types";
 import { buildBookingUrl } from "./deep-link";
@@ -60,5 +63,11 @@ export class MockAdapter implements BookingEngineAdapter {
 
   buildBookingUrl(req: BookingInitRequest): string | null {
     return buildBookingUrl(req);
+  }
+
+  async createReservation(_req: CreateReservationRequest): Promise<CreateReservationResult> {
+    void _req; // mock: request diabaikan — data deterministik (OSB-002).
+    // Mock: deterministik, tanpa validasi engine — hanya dev/test (OSB-002).
+    return { reservationId: `MOCK-${randomUUID()}`, status: "confirmed" };
   }
 }

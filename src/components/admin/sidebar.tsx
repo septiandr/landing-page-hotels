@@ -9,6 +9,7 @@ import {
   BedDouble,
   BookOpenText,
   Building2,
+  CalendarCheck2,
   CalendarClock,
   CarFront,
   FileText,
@@ -32,11 +33,20 @@ export interface NavItem {
   label: string;
   icon: typeof LayoutDashboard;
   /** Permission yang dibutuhkan — null = semua role. */
-  permission?: "content" | "promotion" | "publish" | "settings" | "users" | "analytics" | null;
+  permission?:
+    | "content"
+    | "promotion"
+    | "publish"
+    | "settings"
+    | "users"
+    | "analytics"
+    | "onsite_booking"
+    | null;
 }
 
 export const NAV_ITEMS: NavItem[] = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, permission: null },
+  { href: "/admin/bookings", label: "Bookings", icon: CalendarCheck2, permission: "onsite_booking" },
   { href: "/admin/rooms", label: "Rooms", icon: BedDouble, permission: "content" },
   { href: "/admin/gallery", label: "Gallery", icon: Images, permission: "content" },
   { href: "/admin/promotions", label: "Promotions", icon: TicketPercent, permission: "promotion" },
@@ -54,8 +64,14 @@ export const NAV_ITEMS: NavItem[] = [
 ];
 
 export function filteredNav(role: Role): NavItem[] {
-  // Sumber kebenaran matriks: lib/rbac.ts (VIEWER tidak punya akses CMS).
-  return NAV_ITEMS.filter((item) => item.permission == null || can(role, item.permission));
+  // Sumber kebenaran matriks: lib/rbac.ts (VIEWER tidak punya akses CMS,
+  // kecuali halaman Bookings — read-only via requirePermissionWithRead).
+  return NAV_ITEMS.filter(
+    (item) =>
+      item.permission == null ||
+      can(role, item.permission) ||
+      (item.href === "/admin/bookings" && role === "VIEWER"),
+  );
 }
 
 export function Sidebar({ role, userName }: { role: Role; userName: string }) {

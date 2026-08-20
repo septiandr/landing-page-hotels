@@ -4,6 +4,7 @@ import {
   fetchRates,
   buildRateOptions,
 } from "./cloudbeds-availability";
+import { createCloudbedsReservation } from "./cloudbeds-create-reservation";
 import { roomAbbrByCloudbedsId } from "./room-map";
 import { buildBookingUrl as buildDeepLink } from "./deep-link";
 import type {
@@ -11,6 +12,8 @@ import type {
   AvailabilityResponse,
   BookingEngineAdapter,
   BookingInitRequest,
+  CreateReservationRequest,
+  CreateReservationResult,
 } from "./types";
 
 /**
@@ -97,6 +100,10 @@ export class CloudbedsAdapter implements BookingEngineAdapter {
     const roomType =
       req.roomType ?? (req.roomId ? roomAbbrByCloudbedsId(req.roomId) : undefined);
     return buildDeepLink({ ...req, roomType });
+  }
+
+  async createReservation(req: CreateReservationRequest): Promise<CreateReservationResult> {
+    return createCloudbedsReservation(this.config(), req);
   }
 
   private config() {

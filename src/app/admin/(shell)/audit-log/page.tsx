@@ -13,6 +13,9 @@ const ACTIONS = [
   "DELETE",
   "PUBLISH",
   "UNPUBLISH",
+  "CHECK_IN",
+  "CHECK_OUT",
+  "CANCEL",
   "LOGIN",
   "LOGIN_FAILED",
 ] as const;
@@ -29,6 +32,7 @@ const ENTITY_LABELS: Record<string, string> = {
   Hotel: "Hotel",
   SeoMeta: "SEO",
   User: "Pengguna",
+  Booking: "Booking",
 };
 
 type Params = Promise<{ entity?: string; action?: string; page?: string }>;
